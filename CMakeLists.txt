@@ -1,0 +1,56 @@
+cmake_minimum_required(VERSION 2.8.3)
+project(twist_mux)
+
+find_package(catkin REQUIRED
+    COMPONENTS
+      roscpp
+      std_msgs
+      geometry_msgs
+      visualization_msgs)
+
+find_package(Boost REQUIRED)
+
+set(CMAKE_CXX_FLAGS "-std=c++0x ${CMAKE_CXX_FLAGS}")
+
+catkin_package(
+    INCLUDE_DIRS include
+    CATKIN_DEPENDS
+      roscpp
+      std_msgs
+      geometry_msgs
+      visualization_msgs)
+
+include_directories(include ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
+
+add_executable(twist_mux
+    src/twist_mux.cpp
+    src/twist_mux_node.cpp
+    src/twist_mux_diagnostics.cpp)
+target_link_libraries(twist_mux ${catkin_LIBRARIES})
+
+add_executable(twist_marker
+    src/twist_marker.cpp)
+target_link_libraries(twist_marker ${catkin_LIBRARIES})
+
+install(TARGETS twist_mux twist_marker
+    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
+install(PROGRAMS scripts/joystick_relay.py
+    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
+foreach(dir launch config)
+    install(DIRECTORY ${dir}/
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/${dir})
+endforeach(dir)
+
+install(DIRECTORY include/
+   DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION}
+   FILES_MATCHING PATTERN "*.h"
+)
+
+if (CATKIN_ENABLE_TESTING)
+    find_package(catkin COMPONENTS rostest)
+    include_directories(include ${catkin_INCLUDE_DIRS})
+
+    add_rostest(test/system.test)
+endif()
