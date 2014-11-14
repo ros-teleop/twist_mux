@@ -19,12 +19,14 @@
   <build_depend>std_msgs</build_depend>
   <build_depend>geometry_msgs</build_depend>
   <build_depend>visualization_msgs</build_depend>
+  <build_depend>diagnostic_updater</build_depend>
 
   <run_depend>roscpp</run_depend>
   <run_depend>std_msgs</run_depend>
   <run_depend>geometry_msgs</run_depend>
   <run_depend>visualization_msgs</run_depend>
   <run_depend>twist_mux_msgs</run_depend>
+  <run_depend>diagnostic_updater</run_depend>
 
   <!-- Tests -->
   <test_depend>rostest</test_depend>
