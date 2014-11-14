@@ -2,8 +2,8 @@
 Changelog for package twist_mux
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.2 (2014-11-14)
+------------------
 * Add diagnostic_updater dependency
 * Contributors: Enrique Fernández
 
