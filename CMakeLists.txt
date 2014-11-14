@@ -6,7 +6,8 @@ find_package(catkin REQUIRED
       roscpp
       std_msgs
       geometry_msgs
-      visualization_msgs)
+      visualization_msgs
+      diagnostic_updater)
 
 find_package(Boost REQUIRED)
 
@@ -18,7 +19,8 @@ catkin_package(
       roscpp
       std_msgs
       geometry_msgs
-      visualization_msgs)
+      visualization_msgs
+      diagnostic_updater)
 
 include_directories(include ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
 
