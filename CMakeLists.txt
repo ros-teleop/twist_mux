@@ -43,7 +43,7 @@ install(PROGRAMS scripts/joystick_relay.py
 foreach(dir launch config)
     install(DIRECTORY ${dir}/
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/${dir})
-endforeach(dir)
+endforeach()
 
 install(DIRECTORY include/
    DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION}
@@ -51,8 +51,7 @@ install(DIRECTORY include/
 )
 
 if (CATKIN_ENABLE_TESTING)
-    find_package(catkin COMPONENTS rostest)
-    include_directories(include ${catkin_INCLUDE_DIRS})
+    find_package(rostest REQUIRED)
 
     add_rostest(test/system.test)
 endif()
