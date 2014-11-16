@@ -2,6 +2,11 @@
 Changelog for package twist_mux
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add missed test dependencies on rospy, rostopic
+* Contributors: Enrique Fernandez
+
 0.0.3 (2014-11-16)
 ------------------
 * Add .gitignore
