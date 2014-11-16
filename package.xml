@@ -30,4 +30,6 @@
 
   <!-- Tests -->
   <build_depend>rostest</build_depend>
+  <test_depend>rospy</test_depend>
+  <test_depend>rostopic</test_depend>
 </package>
