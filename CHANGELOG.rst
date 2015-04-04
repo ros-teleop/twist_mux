@@ -2,6 +2,11 @@
 Changelog for package twist_mux
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Update maintainer email
+* Contributors: Enrique Fernandez
+
 1.0.2 (2014-11-14)
 ------------------
 * Increase version to 1.0.1 for indigo release
