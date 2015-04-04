@@ -7,8 +7,9 @@
       allows to priorize or disable them (locks).
   </description>
 
-  <maintainer email="enrique.fernandez@pal-robotics.com">Enrique Fernandez</maintainer>
-  <author email="enrique.fernandez@pal-robotics.com">Enrique Fernandez</author>
+  <maintainer email="efernandez@clearpathrobotics.com">Enrique Fernandez</maintainer>
+
+  <author email="efernandez@clearpathrobotics.com">Enrique Fernandez</author>
   <author email="siegfried.gevatter@pal-robotics.com">Siegfried-A. Gevatter Pujals</author>
 
   <license>CC BY-NC-SA 4.0</license>
