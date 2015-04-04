@@ -2,8 +2,8 @@
 Changelog for package twist_mux
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.0.3 (2015-04-04)
+------------------
 * Update maintainer email
 * Contributors: Enrique Fernandez
 
