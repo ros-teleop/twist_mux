@@ -33,4 +33,16 @@
   <build_depend>rostest</build_depend>
   <test_depend>rospy</test_depend>
   <test_depend>rostopic</test_depend>
+
+  <export>
+      <rosindex>
+          <tags>
+              <tag>control</tag>
+              <tag>twist</tag>
+              <tag>cmd_vel</tag>
+              <tag>multiplex</tag>
+              <tag>mux</tag>
+          </tags>
+      </rosindex>
+  </export>
 </package>
