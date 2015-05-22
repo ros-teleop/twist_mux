@@ -2,8 +2,8 @@
 Changelog for package twist_mux
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.0.0 (2015-05-22)
+------------------
 * Add rosindex tags
   http://rosindex.github.io/contribute/metadata/#metadata-elements
 * Add missed test dependencies on rospy, rostopic
