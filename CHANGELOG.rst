@@ -2,6 +2,15 @@
 Changelog for package twist_mux
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add rosindex tags
+  http://rosindex.github.io/contribute/metadata/#metadata-elements
+* Add missed test dependencies on rospy, rostopic
+* Add .gitignore for *.pyc in test
+* Fix rostest dependency
+* Contributors: Enrique Fernandez
+
 1.0.3 (2015-04-04)
 ------------------
 * Update maintainer email
