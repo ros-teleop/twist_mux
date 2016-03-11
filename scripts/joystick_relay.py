@@ -131,7 +131,7 @@ class VelocityControl:
 class TextMarker(object):
 
     def __init__(self, scale = 1.0, z = 0.0):
-        self._pub = rospy.Publisher('text_marker', Marker, latch=True)
+        self._pub = rospy.Publisher('text_marker', Marker, queue_size=1, latch=True)
 
         self._scale = scale
         self._z     = z
@@ -173,10 +173,10 @@ class JoystickRelay:
 
         self._marker = TextMarker(0.5, 2.0)
 
-        self._pub_cmd = rospy.Publisher('joy_vel_out', Twist)
+        self._pub_cmd = rospy.Publisher('joy_vel_out', Twist, queue_size=1)
         self._subscriber = rospy.Subscriber('joy_vel_in', Twist, self._forward_cmd, queue_size=1)
 
-        self._pub_priority = rospy.Publisher('joy_priority', Bool, latch=True)
+        self._pub_priority = rospy.Publisher('joy_priority', Bool, queue_size=1, latch=True)
 
         # Wait for subscribers and publish initial joy_priority:
         self._pub_priority.publish(self._current_priority)
