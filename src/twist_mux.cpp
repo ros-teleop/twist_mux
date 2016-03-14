@@ -48,7 +48,7 @@ bool hasIncreasedAbsVelocity(const geometry_msgs::Twist& old_twist, const geomet
 namespace twist_mux
 {
 
-TwistMux::TwistMux(int window_size)
+TwistMux::TwistMux()
 {
   ros::NodeHandle nh;
   ros::NodeHandle nh_priv("~");
