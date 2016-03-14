@@ -125,7 +125,7 @@ int TwistMux::getLockPriority()
   {
     if (lock_h.isLocked())
     {
-      auto tmp = lock_h.getPriority();
+      const auto tmp = lock_h.getPriority();
       if (priority < tmp)
       {
         priority = tmp;
