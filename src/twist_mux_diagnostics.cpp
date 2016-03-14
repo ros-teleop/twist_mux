@@ -51,11 +51,18 @@ void TwistMuxDiagnostics::updateStatus(const status_type::ConstPtr& status)
 {
   ROS_DEBUG_THROTTLE(1.0, "Updating status.");
 
+  const bool has_status_changed =
+    // @todo the comparison between vectors to lists is failing,
+    // or for the internal elements!
+    //*(status_.velocity_hs) != *(status->velocity_hs) ||
+    //*(status_.lock_hs)     != *(status->lock_hs)     ||
+     status_.priority    !=  status->priority;
+
   status_.velocity_hs = status->velocity_hs;
   status_.lock_hs     = status->lock_hs;
   status_.priority    = status->priority;
 
-  update();
+  update(has_status_changed);
 }
 
 void TwistMuxDiagnostics::diagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat)
