@@ -35,9 +35,16 @@ TwistMuxDiagnostics::TwistMuxDiagnostics()
 TwistMuxDiagnostics::~TwistMuxDiagnostics()
 {}
 
-void TwistMuxDiagnostics::update()
+void TwistMuxDiagnostics::update(const bool force_update)
 {
-  diagnostic_.update();
+  if (force_update)
+  {
+    diagnostic_.force_update();
+  }
+  else
+  {
+    diagnostic_.update();
+  }
 }
 
 void TwistMuxDiagnostics::updateStatus(const status_type::ConstPtr& status)

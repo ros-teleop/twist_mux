@@ -44,7 +44,7 @@ class TwistMuxDiagnostics
 
     void diagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat);
 
-    void update();
+    void update(const bool force_update = false);
 
     void updateStatus(const status_type::ConstPtr& status);
 
