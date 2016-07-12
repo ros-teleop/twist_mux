@@ -34,20 +34,13 @@ struct TwistMuxDiagnosticsStatus
   typedef boost::shared_ptr<TwistMuxDiagnosticsStatus> Ptr;
   typedef boost::shared_ptr<const TwistMuxDiagnosticsStatus> ConstPtr;
 
-  double reading_age;
-  ros::Time last_loop_update;
-  double main_loop_time;
-
   LockTopicHandle::priority_type priority;
 
   boost::shared_ptr<TwistMux::velocity_topic_container> velocity_hs;
   boost::shared_ptr<TwistMux::lock_topic_container>     lock_hs;
 
   TwistMuxDiagnosticsStatus()
-    : reading_age(0),
-      last_loop_update(ros::Time::now()),
-      main_loop_time(0),
-      priority(0)
+    : priority(0)
   {
   }
 };

@@ -35,34 +35,39 @@ TwistMuxDiagnostics::TwistMuxDiagnostics()
 TwistMuxDiagnostics::~TwistMuxDiagnostics()
 {}
 
-void TwistMuxDiagnostics::update()
+void TwistMuxDiagnostics::update(const bool force_update)
 {
-  diagnostic_.update();
+  if (force_update)
+  {
+    diagnostic_.force_update();
+  }
+  else
+  {
+    diagnostic_.update();
+  }
 }
 
 void TwistMuxDiagnostics::updateStatus(const status_type::ConstPtr& status)
 {
   ROS_DEBUG_THROTTLE(1.0, "Updating status.");
 
+  const bool has_status_changed =
+    // @todo the comparison between vectors to lists is failing,
+    // or for the internal elements!
+    //*(status_.velocity_hs) != *(status->velocity_hs) ||
+    //*(status_.lock_hs)     != *(status->lock_hs)     ||
+     status_.priority    !=  status->priority;
+
   status_.velocity_hs = status->velocity_hs;
   status_.lock_hs     = status->lock_hs;
   status_.priority    = status->priority;
 
-  status_.main_loop_time = status->main_loop_time;
-  status_.reading_age    = status->reading_age;
-
-  update();
+  update(has_status_changed);
 }
 
 void TwistMuxDiagnostics::diagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat)
 {
-  /// Check if the loop period is quick enough
-  if (status_.main_loop_time > MAIN_LOOP_TIME_MIN)
-    stat.summary(ERROR, "loop time too long");
-  else if (status_.reading_age > READING_AGE_MIN)
-    stat.summary(ERROR, "data received is too old");
-  else
-    stat.summary(OK, "ok");
+  stat.summary(OK, "ok");
 
   for (const auto& velocity_h : *status_.velocity_hs)
   {
@@ -84,10 +89,7 @@ void TwistMuxDiagnostics::diagnostics(diagnostic_updater::DiagnosticStatusWrappe
               static_cast<int>(lock_h.getPriority()));
   }
 
-  stat.add("current priority", static_cast<int>(status_.priority));
-
-  stat.add("loop time in [sec]", status_.main_loop_time);
-  stat.add("data age in [sec]", status_.reading_age);
+  stat.add("current lock priority", static_cast<int>(status_.priority));
 
   ROS_DEBUG_THROTTLE(1.0, "Publishing diagnostics.");
 }

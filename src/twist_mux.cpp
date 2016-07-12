@@ -48,7 +48,7 @@ bool hasIncreasedAbsVelocity(const geometry_msgs::Twist& old_twist, const geomet
 namespace twist_mux
 {
 
-TwistMux::TwistMux(int window_size)
+TwistMux::TwistMux()
 {
   ros::NodeHandle nh;
   ros::NodeHandle nh_priv("~");
@@ -125,7 +125,7 @@ int TwistMux::getLockPriority()
   {
     if (lock_h.isLocked())
     {
-      auto tmp = lock_h.getPriority();
+      const auto tmp = lock_h.getPriority();
       if (priority < tmp)
       {
         priority = tmp;

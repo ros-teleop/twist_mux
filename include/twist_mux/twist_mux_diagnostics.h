@@ -36,15 +36,12 @@ class TwistMuxDiagnostics
   public:
     typedef TwistMuxDiagnosticsStatus status_type;
 
-    static constexpr double MAIN_LOOP_TIME_MIN = 0.2; // [s]
-    static constexpr double READING_AGE_MIN    = 3.0; // [s]
-
     TwistMuxDiagnostics();
     virtual ~TwistMuxDiagnostics();
 
     void diagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat);
 
-    void update();
+    void update(const bool force_update = false);
 
     void updateStatus(const status_type::ConstPtr& status);
 
