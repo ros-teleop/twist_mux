@@ -2,6 +2,15 @@
 Changelog for package twist_mux
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Merge pull request `#8 <https://github.com/ros-teleop/twist_mux/issues/8>`_ from ros-teleop/update_jade_from_indigo_devel
+  fix queue_size SyntaxWarning
+* fix queue_size SyntaxWarning
+* Update README.md
+  Add documentation link and build status.
+* Contributors: Enrique Fernández Perdomo, Jeremie Deray
+
 2.0.0 (2015-05-22)
 ------------------
 * Add rosindex tags
