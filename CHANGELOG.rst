@@ -2,8 +2,8 @@
 Changelog for package twist_mux
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.0.4 (2016-09-20)
+------------------
 * Merge pull request `#10 <https://github.com/ros-teleop/twist_mux/issues/10>`_ from ros-teleop/fix_diagnostics
   Fix diagnostics
 * Check if status changed on update
