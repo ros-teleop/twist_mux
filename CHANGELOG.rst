@@ -2,6 +2,9 @@
 Changelog for package twist_mux
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 3.0.0 (2016-07-12)
 ------------------
 * Merge pull request `#8 <https://github.com/ros-teleop/twist_mux/issues/8>`_ from ros-teleop/update_jade_from_indigo_devel
