@@ -17,20 +17,18 @@
 /*
  * @author Enrique Fernandez
  * @author Siegfried Gevatter
+ * @author Jeremie Deray
  */
 
-#ifndef TOPIC_HANDLE_H
-#define TOPIC_HANDLE_H
+#ifndef TWIST_MUX__TOPIC_HANDLE_H_
+#define TWIST_MUX__TOPIC_HANDLE_H_
 
-#include <ros/ros.h>
-#include <std_msgs/Bool.h>
-#include <geometry_msgs/Twist.h>
+#include <rclcpp/rclcpp.hpp>
+#include <std_msgs/msg/bool.hpp>
+#include <geometry_msgs/msg/twist.hpp>
 
 #include <twist_mux/utils.h>
 #include <twist_mux/twist_mux.h>
-
-#include <boost/utility.hpp>
-#include <boost/scoped_ptr.hpp>
 
 #include <string>
 #include <vector>
@@ -39,9 +37,17 @@ namespace twist_mux
 {
 
 template<typename T>
-class TopicHandle_ : boost::noncopyable
+class TopicHandle_
 {
 public:
+
+  // Not copy constructible
+  TopicHandle_(TopicHandle_&)                  = delete;
+  TopicHandle_(const TopicHandle_&)            = delete;
+
+  // Not copy assignable
+  TopicHandle_& operator=(TopicHandle_&)       = delete;
+  TopicHandle_& operator=(const TopicHandle_&) = delete;
 
   typedef int priority_type;
 
@@ -55,27 +61,25 @@ public:
    * expired
    * @param priority Priority of the topic
    */
-  TopicHandle_(ros::NodeHandle& nh, const std::string& name, const std::string& topic, double timeout, priority_type priority, TwistMux* mux)
-    : nh_(nh)
-    , name_(name)
+  TopicHandle_(const std::string& name, const std::string& topic,
+               const rclcpp::Duration& timeout,
+               priority_type priority, TwistMux* mux)
+    : name_(name)
     , topic_(topic)
     , timeout_(timeout)
     , priority_(clamp(priority, priority_type(0), priority_type(255)))
     , mux_(mux)
-    , stamp_(0.0)
+    , stamp_(0)
   {
-    ROS_INFO_STREAM
-    (
-      "Topic handler '" << name_ << "' subscribed to topic '" << topic_ <<
-      "': timeout = " << ((timeout_) ? std::to_string(timeout_) + "s" : "None") <<
-      ", priority = " << static_cast<int>(priority_)
-    );
+    RCLCPP_INFO(mux_->get_logger(),
+                "Topic handler '%s' subscribed to topic '%s' "
+                ": timeout = %s , priority = %d.",
+                name_.c_str(), topic_.c_str(),
+                ((timeout_.seconds()>0) ? std::to_string(timeout_.seconds()) + "s" : "None").c_str(),
+                static_cast<int>(priority_));
   }
 
-  virtual ~TopicHandle_()
-  {
-    subscriber_.shutdown();
-  }
+  virtual ~TopicHandle_() = default;
 
   /**
    * @brief hasExpired
@@ -85,8 +89,8 @@ public:
    */
   bool hasExpired() const
   {
-    return (timeout_ > 0.0) and
-           ((ros::Time::now() - stamp_).toSec() > timeout_);
+    return (timeout_.nanoseconds() > 0.0) /*and
+           ((mux_->now() - stamp_) > timeout_)*/;
   }
 
   const std::string& getName() const
@@ -99,7 +103,7 @@ public:
     return topic_;
   }
 
-  const double& getTimeout() const
+  const rclcpp::Duration& getTimeout() const
   {
     return timeout_;
   }
@@ -124,33 +128,47 @@ public:
   }
 
 protected:
-  ros::NodeHandle nh_;
 
   std::string name_;
   std::string topic_;
-  ros::Subscriber subscriber_;
-  double timeout_;
+  typename rclcpp::Subscription<T>::SharedPtr subscriber_;
+  rclcpp::Duration timeout_;
   priority_type priority_;
 
 protected:
+
+  /// @todo replace by weak_ptr?
   TwistMux* mux_;
 
-  ros::Time stamp_;
+  rclcpp::Time stamp_;
   T msg_;
 };
 
-class VelocityTopicHandle : public TopicHandle_<geometry_msgs::Twist>
+class VelocityTopicHandle : public TopicHandle_<geometry_msgs::msg::Twist>
 {
 private:
-  typedef TopicHandle_<geometry_msgs::Twist> base_type;
+  typedef TopicHandle_<geometry_msgs::msg::Twist> base_type;
+
+  // https://index.ros.org/doc/ros2/About-Quality-of-Service-Settings
+  rmw_qos_profile_t twist_qos_profile = rmw_qos_profile_sensor_data;
 
 public:
   typedef typename base_type::priority_type priority_type;
 
-  VelocityTopicHandle(ros::NodeHandle& nh, const std::string& name, const std::string& topic, double timeout, priority_type priority, TwistMux* mux)
-    : base_type(nh, name, topic, timeout, priority, mux)
+  VelocityTopicHandle(const std::string& name, const std::string& topic,
+                      const rclcpp::Duration& timeout,
+                      priority_type priority, TwistMux* mux)
+    : base_type(name, topic, timeout, priority, mux)
   {
-    subscriber_ = nh_.subscribe(topic_, 1, &VelocityTopicHandle::callback, this);
+    /// @todo Deprecated
+    subscriber_ = mux_->create_subscription<geometry_msgs::msg::Twist>
+                         (topic_,
+                          std::bind(&VelocityTopicHandle::callback, this, std::placeholders::_1),
+                          twist_qos_profile);
+
+//    subscriber_ = nh_.create_subscription<geometry_msgs::msg::Twist>
+//                         (topic_, twist_qos_profile,
+//                          std::bind(&VelocityTopicHandle::callback, this, std::placeholders::_1));
   }
 
   bool isMasked(priority_type lock_priority) const
@@ -158,9 +176,9 @@ public:
     return hasExpired() or (getPriority() < lock_priority);
   }
 
-  void callback(const geometry_msgs::TwistConstPtr& msg)
+  void callback(const geometry_msgs::msg::Twist::ConstSharedPtr msg)
   {
-    stamp_ = ros::Time::now();
+    stamp_ = mux_->now();
     msg_   = *msg;
 
     // Check if this twist has priority.
@@ -174,18 +192,27 @@ public:
   }
 };
 
-class LockTopicHandle : public TopicHandle_<std_msgs::Bool>
+class LockTopicHandle : public TopicHandle_<std_msgs::msg::Bool>
 {
 private:
-  typedef TopicHandle_<std_msgs::Bool> base_type;
+  typedef TopicHandle_<std_msgs::msg::Bool> base_type;
+
+  // https://index.ros.org/doc/ros2/About-Quality-of-Service-Settings
+  rmw_qos_profile_t lock_qos_profile = rmw_qos_profile_sensor_data;
 
 public:
   typedef typename base_type::priority_type priority_type;
 
-  LockTopicHandle(ros::NodeHandle& nh, const std::string& name, const std::string& topic, double timeout, priority_type priority, TwistMux* mux)
-    : base_type(nh, name, topic, timeout, priority, mux)
+  LockTopicHandle(const std::string& name, const std::string& topic,
+                  const rclcpp::Duration& timeout,
+                  priority_type priority, TwistMux* mux)
+    : base_type(name, topic, timeout, priority, mux)
   {
-    subscriber_ = nh_.subscribe(topic_, 1, &LockTopicHandle::callback, this);
+    /// @todo Deprecated
+    subscriber_ = mux_->create_subscription<std_msgs::msg::Bool>
+                         (topic_,
+                          std::bind(&LockTopicHandle::callback, this, std::placeholders::_1),
+                          lock_qos_profile);
   }
 
   /**
@@ -197,13 +224,13 @@ public:
     return hasExpired() or getMessage().data;
   }
 
-  void callback(const std_msgs::BoolConstPtr& msg)
+  void callback(const std_msgs::msg::Bool::ConstSharedPtr msg)
   {
-    stamp_ = ros::Time::now();
+    stamp_ = mux_->now();
     msg_   = *msg;
   }
 };
 
 } // namespace twist_mux
 
-#endif // TOPIC_HANDLE_H
+#endif // TWIST_MUX__TOPIC_HANDLE_H_

@@ -32,80 +32,42 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** \author Paul Mathieu. */
+/*
+ * @author Paul Mathieu
+ * @author Jeremie Deray
+ */
 
-#ifndef XMLRPCHELPERS_H
-#define XMLRPCHELPERS_H
+#ifndef TWIST_MUX__PARAMS_HELPERS_H_
+#define TWIST_MUX__PARAMS_HELPERS_H_
 
+#include <rclcpp/rclcpp.hpp>
 #include <sstream>
-#include <ros/ros.h>
 
-namespace xh
+namespace twist_mux
 {
 
-class XmlrpcHelperException : public ros::Exception
+class ParamsHelperException : public std::runtime_error
 {
 public:
-  XmlrpcHelperException(const std::string& what)
-    : ros::Exception(what) {}
+  ParamsHelperException(const std::string& what)
+    : std::runtime_error(what) {}
 };
 
-typedef XmlRpc::XmlRpcValue Struct;
-typedef XmlRpc::XmlRpcValue Array;
-
 template <class T>
-void fetchParam(ros::NodeHandle nh, const std::string& param_name, T& output)
+void fetch_param(rclcpp::Node& nh, const std::string& param_name, T& output)
 {
-  XmlRpc::XmlRpcValue val;
-  if (!nh.getParamCached(param_name, val))
+  rclcpp::Parameter param;
+  if (!nh.get_parameter(param_name, param))
   {
     std::ostringstream err_msg;
     err_msg << "could not load parameter '" << param_name << "'. (namespace: "
-      << nh.getNamespace() << ")";
-    throw XmlrpcHelperException(err_msg.str());
+      << nh.get_namespace() << ")";
+    throw ParamsHelperException(err_msg.str());
   }
 
-  output = static_cast<T>(val);
+  output = param.get_value<T>();
 }
 
-void checkArrayItem(const Array& col, int index)
-{
-  if (col.getType() != XmlRpc::XmlRpcValue::TypeArray)
-    throw XmlrpcHelperException("not an array");
-  if(index >= col.size())
-  {
-    std::ostringstream err_msg;
-    err_msg << "index '" << index << "' is over array capacity";
-    throw XmlrpcHelperException(err_msg.str());
-  }
-}
+} // namespace twist_mux
 
-void checkStructMember(const Struct& col, const std::string& member)
-{
-  if (col.getType() != XmlRpc::XmlRpcValue::TypeStruct)
-    throw XmlrpcHelperException("not a struct");
-  if (!col.hasMember(member))
-  {
-    std::ostringstream err_msg;
-    err_msg << "could not find member '" << member << "'";
-    throw XmlrpcHelperException(err_msg.str());
-  }
-}
-
-template <class T>
-void getArrayItem(Array& col, int index, T& output) // XXX: XmlRpcValue::operator[] is not const
-{
-  checkArrayItem(col, index);
-  output = static_cast<T>(col[index]);
-}
-
-template <class T>
-void getStructMember(Struct& col, const std::string& member, T& output)
-{
-  checkStructMember(col, member);
-  output = static_cast<T>(col[member]);
-}
-
-} // namespace xh
-
-#endif // XMLRPCHELPERS_H
+#endif // TWIST_MUX__PARAMS_HELPERS_H_

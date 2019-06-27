@@ -21,7 +21,7 @@
 #include <twist_mux/twist_mux_diagnostics.h>
 #include <twist_mux/twist_mux_diagnostics_status.h>
 
-#include <diagnostic_updater/diagnostic_updater.h>
+#include <diagnostic_updater/diagnostic_updater.hpp>
 
 namespace twist_mux
 {
@@ -32,9 +32,6 @@ TwistMuxDiagnostics::TwistMuxDiagnostics()
   diagnostic_.setHardwareID("none");
 }
 
-TwistMuxDiagnostics::~TwistMuxDiagnostics()
-{}
-
 void TwistMuxDiagnostics::update()
 {
   diagnostic_.update();
@@ -42,7 +39,7 @@ void TwistMuxDiagnostics::update()
 
 void TwistMuxDiagnostics::updateStatus(const status_type::ConstPtr& status)
 {
-  ROS_DEBUG_THROTTLE(1.0, "Updating status.");
+//  ROS_DEBUG_THROTTLE(1.0, "Updating status.");
 
   status_.velocity_hs = status->velocity_hs;
   status_.lock_hs     = status->lock_hs;
@@ -89,7 +86,7 @@ void TwistMuxDiagnostics::diagnostics(diagnostic_updater::DiagnosticStatusWrappe
   stat.add("loop time in [sec]", status_.main_loop_time);
   stat.add("data age in [sec]", status_.reading_age);
 
-  ROS_DEBUG_THROTTLE(1.0, "Publishing diagnostics.");
+//  ROS_DEBUG_THROTTLE(1.0, "Publishing diagnostics.");
 }
 
 } // namespace twist_mux

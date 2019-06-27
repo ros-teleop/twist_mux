@@ -19,8 +19,8 @@
  * @author Siegfried Gevatter
  */
 
-#ifndef UTILS_H
-#define UTILS_H
+#ifndef TWIST_MUX__UTILS_H_
+#define TWIST_MUX__UTILS_H_
 
 // This could be taken from #include <boost/algorithm/clamp.hpp>
 // but it seems that all versions of Boost have it.
@@ -40,5 +40,5 @@ static T clamp(T x, T min, T max)
   return x;
 }
 
-#endif // UTILS_H
+#endif // TWIST_MUX__UTILS_H_
 

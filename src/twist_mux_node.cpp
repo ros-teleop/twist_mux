@@ -17,23 +17,21 @@
 /*
  * @author Enrique Fernandez
  * @author Siegfried Gevatter
+ * @author Jeremie Deray
  */
 
-#include <ros/ros.h>
 #include <twist_mux/twist_mux.h>
 
-int
-main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
-  ros::init(argc, argv, "twist_mux");
+  rclcpp::init(argc, argv);
 
-  twist_mux::TwistMux mux;
+  auto twist_mux_node = std::make_shared<twist_mux::TwistMux>();
 
-  while (ros::ok())
-  {
-    ros::spin();
-  }
+  twist_mux_node->init();
+
+  rclcpp::spin(twist_mux_node);
+  rclcpp::shutdown();
 
   return EXIT_SUCCESS;
 }
-

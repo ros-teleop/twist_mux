@@ -10,7 +10,7 @@
 # any purpose with or without fee is hereby granted, provided that the
 # above copyright notice and this permission notice appear in all
 # copies.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
 # REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 # MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL ISC BE LIABLE FOR ANY
@@ -24,18 +24,26 @@
 
 import sys
 import thread
+from time import sleep
 
-import rospy
+import rclpy
+from rclpy.node import Node
+from rclpy.qos import QoSProfile, QoSDurabilityPolicy
 
-class _RatePublisher(object):
+
+class _RatePublisher(Node):
 
     # How many seconds before the expected time a message may
     # be published.
     _tolerance = 0.01
 
     def __init__(self, topic, msg_type, latch=False):
+        super().__init__('rate_publisher')
         self._topic = topic
-        self._publisher = rospy.Publisher(topic, msg_type, latch=True)
+        latching_qos = QoSProfile(
+            depth=1,
+            durability=QoSDurabilityPolicy.RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL)
+        self._publisher = self.create_publisher(msg_type, topic, qos_profile=latching_qos)
         self._message = None
         self._period = None  # 1 / freq
         self._last_pub = 0
@@ -51,7 +59,7 @@ class _RatePublisher(object):
     def publish_once(self):
         msg = self._message() if callable(self._message) else self._message
         self._publisher.publish(msg)
-        self._last_pub = rospy.Time.now()
+        self._last_pub = self.get_clock().now()
 
     def spin_once(self):
         """
@@ -62,7 +70,7 @@ class _RatePublisher(object):
         """
         if not self._period:
             return None
-        elapsed = (rospy.Time.now() - self._last_pub).to_sec()
+        elapsed = (self.get_clock().now() - self._last_pub).to_sec()
         if elapsed >= (self._period - self._tolerance):
             self.publish_once()
             return self._period
@@ -139,16 +147,16 @@ class TimeoutManager(object):
         self._members.append(m)
 
     def spin(self):
-        while not rospy.core.is_shutdown() and not self._shutdown:
+        while rclpy.ok() and not self._shutdown:
             try:
                 for m in self._members:
                     m.spin_once()
-                    rospy.sleep(0.01)  # FIXME
+                    sleep(0.01)  # FIXME
             except Exception, e:
-                rospy.logfatal(e)
+                self.get_logger().fatal('%s' % str(e))
 
     def spin_thread(self):
-        rospy.loginfo("Spawning thread for TopicTestManager...")
+        self.get_logger().info("Spawning thread for TopicTestManager...")
         thread.start_new_thread(self.spin, ())
 
     def shutdown(self):

@@ -16,17 +16,15 @@
 
 /*
  * @author Enrique Fernandez
+ * @author Jeremie Deray
  */
 
-#ifndef TWIST_MUX_DIAGNOSTICS_H
-#define TWIST_MUX_DIAGNOSTICS_H
+#ifndef TWIST_MUX__TWIST_MUX_DIAGNOSTICS_H_
+#define TWIST_MUX__TWIST_MUX_DIAGNOSTICS_H_
 
 #include <twist_mux/twist_mux_diagnostics_status.h>
 
-#include <diagnostic_updater/diagnostic_updater.h>
-#include <ros/ros.h>
-
-#include <boost/shared_ptr.hpp>
+#include <diagnostic_updater/diagnostic_updater.hpp>
 
 namespace twist_mux
 {
@@ -40,7 +38,7 @@ class TwistMuxDiagnostics
     static constexpr double READING_AGE_MIN    = 3.0; // [s]
 
     TwistMuxDiagnostics();
-    virtual ~TwistMuxDiagnostics();
+    virtual ~TwistMuxDiagnostics() = default;
 
     void diagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat);
 
@@ -55,9 +53,9 @@ class TwistMuxDiagnostics
      */
     enum
     {
-      OK    = diagnostic_msgs::DiagnosticStatus::OK,
-      WARN  = diagnostic_msgs::DiagnosticStatus::WARN,
-      ERROR = diagnostic_msgs::DiagnosticStatus::ERROR
+      OK    = diagnostic_msgs::msg::DiagnosticStatus::OK,
+      WARN  = diagnostic_msgs::msg::DiagnosticStatus::WARN,
+      ERROR = diagnostic_msgs::msg::DiagnosticStatus::ERROR
     };
 
     diagnostic_updater::Updater diagnostic_;
@@ -66,4 +64,4 @@ class TwistMuxDiagnostics
 
 } // namespace twist_mux
 
-#endif // TWIST_MUX_DIAGNOSTICS_H
+#endif // TWIST_MUX__TWIST_MUX_DIAGNOSTICS_H_
