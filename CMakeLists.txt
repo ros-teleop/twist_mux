@@ -10,32 +10,28 @@ find_package(visualization_msgs REQUIRED)
 find_package(diagnostic_updater REQUIRED)
 
 include_directories(include)
-include_directories(SYSTEM
-  ${rclcpp_INCLUDE_DIRS}
-  ${std_msgs_INCLUDE_DIRS}
-  ${geometry_msgs_INCLUDE_DIRS}
-  ${visualization_msgs_INCLUDE_DIRS}
-  ${diagnostic_updater_INCLUDE_DIRS}
-)
 
 add_executable(twist_mux
   src/twist_mux.cpp
   src/twist_mux_node.cpp
-  src/twist_mux_diagnostics.cpp)
-target_link_libraries(twist_mux
-  ${rclcpp_LIBRARIES}
-  ${std_msgs_LIBRARIES}
-  ${geometry_msgs_LIBRARIES}
-  ${visualization_msgs_LIBRARIES}
-  ${diagnostic_updater_LIBRARIES})
+  src/twist_mux_diagnostics.cpp
+  )
+ament_target_dependencies(twist_mux
+  rclcpp
+  std_msgs
+  geometry_msgs
+  visualization_msgs
+  diagnostic_updater)
 
-add_executable(twist_marker src/twist_marker.cpp)
-target_link_libraries(twist_marker
-  ${rclcpp_LIBRARIES}
-  ${std_msgs_LIBRARIES}
-  ${geometry_msgs_LIBRARIES}
-  ${visualization_msgs_LIBRARIES}
-  ${diagnostic_updater_LIBRARIES})
+add_executable(twist_marker
+  src/twist_marker.cpp
+  )
+ament_target_dependencies(twist_marker
+  rclcpp
+  std_msgs
+  geometry_msgs
+  visualization_msgs
+  diagnostic_updater)
 
 install(TARGETS twist_mux twist_marker
   RUNTIME DESTINATION lib/${PROJECT_NAME})

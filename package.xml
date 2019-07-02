@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
-<package format="2">
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
   <name>twist_mux</name>
   <version>3.1.0</version>
   <description>
@@ -8,32 +9,19 @@
   </description>
 
   <maintainer email="efernandez@clearpathrobotics.com">Enrique Fernandez</maintainer>
+  <license>CC BY-NC-SA 4.0</license>
 
   <author email="jeremie.deray@canonical.com">Jeremie Deray</author>
   <author email="efernandez@clearpathrobotics.com">Enrique Fernandez</author>
   <author email="siegfried.gevatter@pal-robotics.com">Siegfried-A. Gevatter Pujals</author>
 
-  <license>CC BY-NC-SA 4.0</license>
-
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <build_depend>rclcpp</build_depend>
-  <build_depend>std_msgs</build_depend>
-  <build_depend>geometry_msgs</build_depend>
-  <build_depend>visualization_msgs</build_depend>
-  <build_depend>diagnostic_updater</build_depend>
-
-  <exec_depend>rclcpp</exec_depend>
-  <exec_depend>std_msgs</exec_depend>
-  <exec_depend>geometry_msgs</exec_depend>
-  <exec_depend>visualization_msgs</exec_depend>
-  <exec_depend>twist_mux_msgs</exec_depend>
-  <exec_depend>diagnostic_updater</exec_depend>
-
-  <!-- Tests -->
-  <!--build_depend>rostest</build_depend-->
-  <!--test_depend>rospy</test_depend-->
-  <!--test_depend>rostopic</test_depend-->
+  <depend>rclcpp</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>visualization_msgs</depend>
+  <depend>diagnostic_updater</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
@@ -41,14 +29,5 @@
 
   <export>
     <build_type>ament_cmake</build_type>
-      <!--rosindex-->
-          <!--tags-->
-              <!--tag>control</tag-->
-              <!--tag>twist</tag-->
-              <!--tag>cmd_vel</tag-->
-              <!--tag>multiplex</tag-->
-              <!--tag>mux</tag-->
-          <!--/tags-->
-      <!--/rosindex-->
   </export>
 </package>
