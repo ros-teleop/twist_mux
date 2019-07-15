@@ -52,12 +52,14 @@ install(DIRECTORY include/${PROJECT_NAME}/
 if (BUILD_TESTING)
   #  find_package(ament_cmake_pytest REQUIRED)
   #  find_package(ament_cmake_xmllint REQUIRED)
-  find_package(ament_lint_auto REQUIRED)
 
-  ament_lint_auto_find_test_dependencies()
-  ament_add_pytest_test('twist_mux' test)
-  #  find_package(launch_testing_ament_cmake)
-  #  add_launch_test(test/test.launch.py)
+  # find_package(ament_lint_auto REQUIRED)
+  # ament_lint_auto_find_test_dependencies()
+
+  # ament_add_pytest_test('twist_mux' test)
+
+  find_package(launch_testing_ament_cmake)
+  add_launch_test(test/system.test.py)
 
   #  ament_add_pytest_test(twist_mux test)
   #find_package(ament_cmake_gtest REQUIRED)

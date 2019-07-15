@@ -23,7 +23,7 @@
 #   * Siegfried-A. Gevatter
 
 import sys
-import thread
+import _thread
 from time import sleep
 
 import rclpy
@@ -37,8 +37,8 @@ class _RatePublisher(Node):
     # be published.
     _tolerance = 0.01
 
-    def __init__(self, topic, msg_type, latch=False):
-        super().__init__('rate_publisher')
+    def __init__(self, topic, msg_type, context, latch=False):
+        super().__init__('rate_publisher_'+topic, context=context)
         self._topic = topic
         latching_qos = QoSProfile(
             depth=1,
@@ -63,14 +63,14 @@ class _RatePublisher(Node):
 
     def spin_once(self):
         """
-        Gives _RatePublisher a chance to publish a stored message.
+        Give _RatePublisher a chance to publish a stored message.
 
         This method returns the remaining time until the next scheduled
-        publication (or None).
+        publication (or -1).
         """
         if not self._period:
-            return None
-        elapsed = (self.get_clock().now() - self._last_pub).to_sec()
+            return -1
+        elapsed = (self.get_clock().now() - self._last_pub).nanoseconds / 1e9
         if elapsed >= (self._period - self._tolerance):
             self.publish_once()
             return self._period
@@ -85,8 +85,9 @@ class RatePublishers(object):
     The main purpose of this class is for unit testing.
     """
 
-    def __init__(self):
+    def __init__(self, context):
         self._publishers = {}
+        self._context = context
 
     def add_topic(self, topic, msg_type):
         """
@@ -99,7 +100,7 @@ class RatePublishers(object):
         connect.
         """
         assert topic not in self._publishers
-        rate_publisher = _RatePublisher(topic, msg_type, latch=True)
+        rate_publisher = _RatePublisher(topic, msg_type, self._context, latch=True)
         self._publishers[topic] = rate_publisher
         return rate_publisher
 
@@ -130,9 +131,9 @@ class RatePublishers(object):
         # TODO: Create a class that spawns a global thread and provides
         #       createTimer and createWallTimer, just like NodeHandle
         #       does in rospy?
-        next_timeout = sys.maxint
-        for topic in self._publishers.itervalues():
-            next_timeout = min(topic.spin_once(), next_timeout)
+        next_timeout = sys.maxsize
+        for topic, pub in self._publishers.items():
+            next_timeout = min(pub.spin_once(), next_timeout)
         return next_timeout
 
 
@@ -152,12 +153,13 @@ class TimeoutManager(object):
                 for m in self._members:
                     m.spin_once()
                     sleep(0.01)  # FIXME
-            except Exception, e:
-                self.get_logger().fatal('%s' % str(e))
+            except Exception as e:
+                print(str(e))
+                raise e
 
     def spin_thread(self):
-        self.get_logger().info("Spawning thread for TopicTestManager...")
-        thread.start_new_thread(self.spin, ())
+        print("Spawning thread for TopicTestManager...")
+        _thread.start_new_thread(self.spin, ())
 
     def shutdown(self):
         self._shutdown = True
