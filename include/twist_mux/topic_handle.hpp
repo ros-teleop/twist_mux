@@ -18,6 +18,7 @@
  * @author Enrique Fernandez
  * @author Siegfried Gevatter
  * @author Jeremie Deray
+ * @author Brighten Lee
  */
 
 #ifndef TWIST_MUX__TOPIC_HANDLE_HPP_

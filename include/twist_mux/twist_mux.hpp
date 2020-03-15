@@ -90,8 +90,7 @@ protected:
   geometry_msgs::msg::Twist last_cmd_;
 
   template <typename T>
-  void getTopicHandles(  // rclcpp::Node& nh, rclcpp::Node& nh_priv,
-      const std::string& param_name, handle_container<T>& topic_hs);
+  void getTopicHandles(const std::string& param_name, handle_container<T>& topic_hs);
 
   int getLockPriority();
 
