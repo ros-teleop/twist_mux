@@ -19,8 +19,8 @@
  * @author Siegfried Gevatter
  */
 
-#ifndef TWIST_MUX__UTILS_H_
-#define TWIST_MUX__UTILS_H_
+#ifndef TWIST_MUX__UTILS_HPP_
+#define TWIST_MUX__UTILS_HPP_
 
 // This could be taken from #include <boost/algorithm/clamp.hpp>
 // but it seems that all versions of Boost have it.
@@ -32,13 +32,14 @@
  * @param max Max value of the range [min, max]
  * @return Value clamped to the range [min, max]
  */
-template<typename T>
+template <typename T>
 static T clamp(T x, T min, T max)
 {
-       if (  x < min) x = min;
-  else if (max <   x) x = max;
+  if (x < min)
+    x = min;
+  else if (max < x)
+    x = max;
   return x;
 }
 
-#endif // TWIST_MUX__UTILS_H_
-
+#endif  // TWIST_MUX__UTILS_HPP_

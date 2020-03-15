@@ -20,7 +20,7 @@
  * @author Jeremie Deray
  */
 
-#include <twist_mux/twist_mux.h>
+#include <twist_mux/twist_mux.hpp>
 
 int main(int argc, char* argv[])
 {
@@ -31,6 +31,7 @@ int main(int argc, char* argv[])
   twist_mux_node->init();
 
   rclcpp::spin(twist_mux_node);
+
   rclcpp::shutdown();
 
   return EXIT_SUCCESS;

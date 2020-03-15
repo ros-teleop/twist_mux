@@ -20,8 +20,8 @@
  * @author Jeremie Deray
  */
 
-#ifndef TWIST_MUX__TWIST_MUX_H_
-#define TWIST_MUX__TWIST_MUX_H_
+#ifndef TWIST_MUX__TWIST_MUX_HPP_
+#define TWIST_MUX__TWIST_MUX_HPP_
 
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/bool.hpp>
@@ -29,13 +29,13 @@
 
 #include <list>
 
-namespace {
+namespace
+{
 using namespace std::chrono_literals;
 }
 
 namespace twist_mux
 {
-
 // Forwarding declarations:
 class TwistMuxDiagnostics;
 struct TwistMuxDiagnosticsStatus;
@@ -49,10 +49,10 @@ class LockTopicHandle;
 class TwistMux : public rclcpp::Node
 {
 public:
+  // RCLCPP_SMART_PTR_DEFINITIONS(TwistMux);
 
-  RCLCPP_SMART_PTR_DEFINITIONS(TwistMux);
-
-  template<typename T> using handle_container = std::list<T>;
+  template <typename T>
+  using handle_container = std::list<T>;
 
   using velocity_topic_container = handle_container<VelocityTopicHandle>;
   using lock_topic_container = handle_container<LockTopicHandle>;
@@ -60,7 +60,7 @@ public:
   TwistMux(int window_size = 10);
   ~TwistMux() = default;
 
-  bool init();
+  void init();
 
   bool hasPriority(const VelocityTopicHandle& twist);
 
@@ -69,8 +69,7 @@ public:
   void updateDiagnostics();
 
 protected:
-
-  typedef TwistMuxDiagnostics       diagnostics_type;
+  typedef TwistMuxDiagnostics diagnostics_type;
   typedef TwistMuxDiagnosticsStatus status_type;
 
   rclcpp::TimerBase::SharedPtr diagnostics_timer_;
@@ -84,22 +83,22 @@ protected:
    * must reserve the number of handles initially.
    */
   std::shared_ptr<velocity_topic_container> velocity_hs_;
-  std::shared_ptr<lock_topic_container>     lock_hs_;
+  std::shared_ptr<lock_topic_container> lock_hs_;
 
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_pub_;
 
   geometry_msgs::msg::Twist last_cmd_;
 
-  template<typename T>
-  void getTopicHandles(//rclcpp::Node& nh, rclcpp::Node& nh_priv,
-                       const std::string& param_name, handle_container<T>& topic_hs);
+  template <typename T>
+  void getTopicHandles(  // rclcpp::Node& nh, rclcpp::Node& nh_priv,
+      const std::string& param_name, handle_container<T>& topic_hs);
 
   int getLockPriority();
 
   std::shared_ptr<diagnostics_type> diagnostics_;
-  std::shared_ptr<status_type>      status_;
+  std::shared_ptr<status_type> status_;
 };
 
-} // namespace twist_mux
+}  // namespace twist_mux
 
-#endif // TWIST_MUX__TWIST_MUX_H_
+#endif  // TWIST_MUX__TWIST_MUX_H_

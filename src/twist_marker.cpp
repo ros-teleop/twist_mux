@@ -29,12 +29,8 @@
 class TwistMarker
 {
 public:
-
-  TwistMarker(double scale = 1.0, double z = 0.0,
-              const std::string& frame_id = "base_footprint")
-    : frame_id_(frame_id)
-    , scale_(scale)
-    , z_(z)
+  TwistMarker(double scale = 1.0, double z = 0.0, const std::string& frame_id = "base_footprint")
+    : frame_id_(frame_id), scale_(scale), z_(z)
   {
     // ID and type:
     marker_.id = 0;
@@ -92,18 +88,12 @@ private:
 class TwistMarkerPublisher : public rclcpp::Node
 {
 public:
-
-  TwistMarkerPublisher(double scale = 1.0, double z = 0.0)
-    : Node("twist_marker")
-    , marker_(scale, z)
+  TwistMarkerPublisher(double scale = 1.0, double z = 0.0) : Node("twist_marker"), marker_(scale, z)
   {
-    pub_ = create_publisher<visualization_msgs::msg::Marker>("marker",
-                                                             rclcpp::QoS(rclcpp::KeepLast(1)));
+    pub_ = create_publisher<visualization_msgs::msg::Marker>("marker", rclcpp::QoS(rclcpp::KeepLast(1)));
 
-    sub_ = create_subscription<geometry_msgs::msg::Twist>
-            ("twist",
-             std::bind(&TwistMarkerPublisher::callback, this, std::placeholders::_1),
-             rmw_qos_profile_sensor_data);
+    sub_ = create_subscription<geometry_msgs::msg::Twist>(
+        "twist", std::bind(&TwistMarkerPublisher::callback, this, std::placeholders::_1), rmw_qos_profile_sensor_data);
   }
 
   void callback(const geometry_msgs::msg::Twist::ConstSharedPtr twist)
@@ -114,14 +104,13 @@ public:
   }
 
 private:
-
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr sub_;
   rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr pub_;
 
   TwistMarker marker_;
 };
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   rclcpp::init(argc, argv);
 

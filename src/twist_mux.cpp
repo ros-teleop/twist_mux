@@ -20,12 +20,12 @@
  * @author Jeremie Deray
  */
 
-#include <twist_mux/twist_mux.h>
-#include <twist_mux/topic_handle.h>
-#include <twist_mux/twist_mux_diagnostics.h>
-#include <twist_mux/twist_mux_diagnostics_status.h>
-#include <twist_mux/utils.h>
-#include <twist_mux/params_helpers.h>
+#include <twist_mux/twist_mux.hpp>
+#include <twist_mux/topic_handle.hpp>
+#include <twist_mux/twist_mux_diagnostics.hpp>
+#include <twist_mux/twist_mux_diagnostics_status.hpp>
+#include <twist_mux/utils.hpp>
+#include <twist_mux/params_helpers.hpp>
 
 /**
  * @brief hasIncreasedAbsVelocity Check if the absolute velocity has increased
@@ -34,8 +34,7 @@
  * @param new_twist New velocity
  * @return true is any of the absolute velocity components has increased
  */
-bool hasIncreasedAbsVelocity(const geometry_msgs::msg::Twist& old_twist,
-                             const geometry_msgs::msg::Twist& new_twist)
+bool hasIncreasedAbsVelocity(const geometry_msgs::msg::Twist& old_twist, const geometry_msgs::msg::Twist& new_twist)
 {
   const auto old_linear_x = std::abs(old_twist.linear.x);
   const auto new_linear_x = std::abs(new_twist.linear.x);
@@ -43,48 +42,38 @@ bool hasIncreasedAbsVelocity(const geometry_msgs::msg::Twist& old_twist,
   const auto old_angular_z = std::abs(old_twist.angular.z);
   const auto new_angular_z = std::abs(new_twist.angular.z);
 
-  return (old_linear_x  < new_linear_x ) or
-         (old_angular_z < new_angular_z);
+  return (old_linear_x < new_linear_x) or (old_angular_z < new_angular_z);
 }
 
 namespace twist_mux
 {
-
 // see e.g. https://stackoverflow.com/a/40691657
-constexpr std::chrono::duration<long int>
-TwistMux::DIAGNOSTICS_PERIOD;
+constexpr std::chrono::duration<long int> TwistMux::DIAGNOSTICS_PERIOD;
 
 TwistMux::TwistMux(int window_size)
   : Node("twist_mux", "",
-          rclcpp::NodeOptions()
-          .allow_undeclared_parameters(true)
-          .automatically_declare_parameters_from_overrides(true))
+         rclcpp::NodeOptions().allow_undeclared_parameters(true).automatically_declare_parameters_from_overrides(true))
 {
-  //
 }
 
-bool TwistMux::init()
+void TwistMux::init()
 {
   /// Get topics and locks:
   velocity_hs_ = std::make_shared<velocity_topic_container>();
-  lock_hs_     = std::make_shared<lock_topic_container>();
+  lock_hs_ = std::make_shared<lock_topic_container>();
   getTopicHandles("topics", *velocity_hs_);
-  getTopicHandles("locks" , *lock_hs_ );
+  getTopicHandles("locks", *lock_hs_);
 
   /// Publisher for output topic:
-  cmd_pub_ = create_publisher<geometry_msgs::msg::Twist>(
-              "cmd_vel_out", rclcpp::QoS(rclcpp::KeepLast(1)));
+  cmd_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel_out", rclcpp::QoS(rclcpp::KeepLast(1)));
 
   /// Diagnostics:
-  diagnostics_ = std::make_shared<diagnostics_type>();
-  status_      = std::make_shared<status_type>();
+  diagnostics_ = std::make_shared<diagnostics_type>(this);
+  status_ = std::make_shared<status_type>();
   status_->velocity_hs = velocity_hs_;
-  status_->lock_hs     = lock_hs_;
+  status_->lock_hs = lock_hs_;
 
-  diagnostics_timer_ = create_wall_timer(DIAGNOSTICS_PERIOD,
-                                         [this](){updateDiagnostics();});
-
-  RCLCPP_INFO(get_logger(), "twist_mux up and running !");
+  diagnostics_timer_ = this->create_wall_timer(DIAGNOSTICS_PERIOD, [this]() -> void { updateDiagnostics(); });
 }
 
 void TwistMux::updateDiagnostics()
@@ -98,13 +87,12 @@ void TwistMux::publishTwist(const geometry_msgs::msg::Twist::ConstSharedPtr& msg
   cmd_pub_->publish(*msg);
 }
 
-template<typename T>
+template <typename T>
 void TwistMux::getTopicHandles(const std::string& param_name, std::list<T>& topic_hs)
 {
   RCLCPP_DEBUG(get_logger(), "getTopicHandles: %s", param_name.c_str());
 
-  rcl_interfaces::msg::ListParametersResult list =
-    list_parameters({param_name}, 10);
+  rcl_interfaces::msg::ListParametersResult list = list_parameters({ param_name }, 10);
 
   try
   {
@@ -116,17 +104,16 @@ void TwistMux::getTopicHandles(const std::string& param_name, std::list<T>& topi
       double timeout = 0;
       int priority = 0;
 
-      auto& nh = *static_cast<rclcpp::Node*>(this);
+      auto nh = std::shared_ptr<rclcpp::Node>(this, [](rclcpp::Node*) {});
 
-      fetch_param(nh, prefix+".topic", topic);
-      fetch_param(nh, prefix+".timeout", timeout);
-      fetch_param(nh, prefix+".priority", priority);
+      fetch_param(nh, prefix + ".topic", topic);
+      fetch_param(nh, prefix + ".timeout", timeout);
+      fetch_param(nh, prefix + ".priority", priority);
 
       RCLCPP_DEBUG(get_logger(), "Retrieved topic: %s", topic.c_str());
       RCLCPP_DEBUG(get_logger(), "Listed prefix: %.2f", timeout);
       RCLCPP_DEBUG(get_logger(), "Listed prefix: %d", priority);
 
-      /// @todo prune prefix ?
       topic_hs.emplace_back(prefix, topic, std::chrono::duration<double>(timeout), priority, this);
     }
   }
@@ -185,4 +172,4 @@ bool TwistMux::hasPriority(const VelocityTopicHandle& twist)
   return twist.getName() == velocity_name;
 }
 
-} // namespace twist_mux
+}  // namespace twist_mux
