@@ -6,7 +6,7 @@ twist_mux:
         timeout : 0.5
         priority: 100
       navigation:
-        topic   : move_base/cmd_vel
+        topic   : navigation/cmd_vel
         timeout : 0.5
         priority: 30
       external:
