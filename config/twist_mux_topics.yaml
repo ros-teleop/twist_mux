@@ -1,6 +1,6 @@
 # Input topics handled/muxed.
 # For each topic:
-# - name *  : name identifier to select the topic (*sub-namespace, see below)
+# - name    : name identifier to select the topic (*sub-namespace, see below)
 # - topic   : input topic of geometry_msgs::Twist type
 # - timeout : timeout in seconds to start discarding old messages, and use 0.0 speed instead
 # - priority: priority in the range [0, 255]; the higher the more priority over other topics
