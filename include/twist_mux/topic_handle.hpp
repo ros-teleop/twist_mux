@@ -69,10 +69,10 @@ public:
     , mux_(mux)
     , stamp_(0)
   {
-    RCLCPP_ERROR(mux_->get_logger(), "Topic handler '%s' subscribed to topic '%s': timeout = %s , priority = %d.",
-                 name_.c_str(), topic_.c_str(),
-                 ((timeout_.seconds() > 0) ? std::to_string(timeout_.seconds()) + "s" : "None").c_str(),
-                 static_cast<int>(priority_));
+    RCLCPP_INFO(mux_->get_logger(), "Topic handler '%s' subscribed to topic '%s': timeout = %s , priority = %d.",
+                name_.c_str(), topic_.c_str(),
+                ((timeout_.seconds() > 0) ? std::to_string(timeout_.seconds()) + "s" : "None").c_str(),
+                static_cast<int>(priority_));
   }
 
   virtual ~TopicHandle_() = default;

@@ -25,12 +25,23 @@ from launch_ros.actions import Node
 def generate_launch_description():
   config_dir = LaunchConfiguration('config_dir', 
     default=os.path.join(get_package_share_directory('twist_mux'), 
-    'config', 'test.yaml'))
+    'config', 'twist_mux_topics.yaml'))
 
   return LaunchDescription([
     Node(
       package='twist_mux', 
       node_executable='twist_mux', 
       output='screen',
-      parameters=[config_dir])
+      remappings={('/cmd_vel_out', '/twist_mux/cmd_vel')},
+      parameters=[config_dir]),
+
+    Node(
+      package='twist_mux', 
+      node_executable='twist_marker', 
+      output='screen',
+      remappings={('/twist', '/twist_mux/cmd_vel')},
+      parameters=[{
+        'frame_id': 'base_link',
+        'scale': 1.0,
+        'vertical_position': 2.0}])
 ])
