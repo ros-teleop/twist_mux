@@ -30,6 +30,7 @@ TwistMuxDiagnostics::TwistMuxDiagnostics(TwistMux* mux)
 {
   diagnostic_ = std::make_shared<diagnostic_updater::Updater>(mux);
   status_ = std::make_shared<status_type>();
+  logger_ = mux->get_logger();
 
   diagnostic_->add("Twist mux status", this, &TwistMuxDiagnostics::diagnostics);
   diagnostic_->setHardwareID("none");
@@ -42,7 +43,7 @@ void TwistMuxDiagnostics::update()
 
 void TwistMuxDiagnostics::updateStatus(const status_type::ConstPtr& status)
 {
-  //  ROS_DEBUG_THROTTLE(1.0, "Updating status.");
+  RCLCPP_DEBUG(logger_, "Updating status.");
 
   status_->velocity_hs = status->velocity_hs;
   status_->lock_hs = status->lock_hs;
@@ -83,7 +84,7 @@ void TwistMuxDiagnostics::diagnostics(diagnostic_updater::DiagnosticStatusWrappe
   stat.add("loop time in [sec]", status_->main_loop_time);
   stat.add("data age in [sec]", status_->reading_age);
 
-  //  ROS_DEBUG_THROTTLE(1.0, "Publishing diagnostics.");
+  RCLCPP_DEBUG(logger_, "Publishing diagnostics.");
 }
 
 }  // namespace twist_mux
