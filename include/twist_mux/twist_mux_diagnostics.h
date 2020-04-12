@@ -59,8 +59,6 @@ private:
 
   std::shared_ptr<diagnostic_updater::Updater> diagnostic_;
   std::shared_ptr<status_type> status_;
-
-  rclcpp::Logger logger_;
 };
 }  // namespace twist_mux
 
