@@ -20,12 +20,12 @@
  * @author Jeremie Deray
  */
 
-#include <twist_mux/twist_mux.hpp>
-#include <twist_mux/topic_handle.hpp>
-#include <twist_mux/twist_mux_diagnostics.hpp>
-#include <twist_mux/twist_mux_diagnostics_status.hpp>
-#include <twist_mux/utils.hpp>
-#include <twist_mux/params_helpers.hpp>
+#include <twist_mux/twist_mux.h>
+#include <twist_mux/topic_handle.h>
+#include <twist_mux/twist_mux_diagnostics.h>
+#include <twist_mux/twist_mux_diagnostics_status.h>
+#include <twist_mux/utils.h>
+#include <twist_mux/params_helpers.h>
 
 /**
  * @brief hasIncreasedAbsVelocity Check if the absolute velocity has increased

@@ -20,7 +20,7 @@
  * @author Jeremie Deray
  */
 
-#include <twist_mux/twist_mux.hpp>
+#include <twist_mux/twist_mux.h>
 
 int main(int argc, char* argv[])
 {

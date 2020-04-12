@@ -19,8 +19,8 @@
  * @author Brighten Lee
  */
 
-#include <twist_mux/twist_mux_diagnostics.hpp>
-#include <twist_mux/twist_mux_diagnostics_status.hpp>
+#include <twist_mux/twist_mux_diagnostics.h>
+#include <twist_mux/twist_mux_diagnostics_status.h>
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
 
