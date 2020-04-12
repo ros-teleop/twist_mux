@@ -1,5 +1,6 @@
 #! /usr/bin/python
 # -*- coding: utf-8 -*-
+
 #
 # twist_mux: joystick_relay.py
 #
@@ -8,15 +9,19 @@
 # Authors:
 #   * Enrique Fernandez
 #   * Siegfried-A. Gevatter
+#   * Jeremie Deray
 
-import rospy
-import actionlib
-from twist_mux_msgs.msg import JoyPriorityAction, JoyTurboAction
+
+import rclpy
+import numpy as np
+
 from geometry_msgs.msg import Twist
+from rclpy.action import ActionServer
+from rclpy.node import Node
 from std_msgs.msg import Bool
+from twist_mux_msgs.msg import JoyPriorityAction, JoyTurboAction
 from visualization_msgs.msg import Marker
 
-import numpy as np
 
 class Velocity(object):
 
@@ -40,58 +45,69 @@ class Velocity(object):
         max_value = self._min + self._step_incr * (step - 1)
         return value * max_value
 
+
 class ServiceLikeActionServer(object):
 
-    def __init__(self, action_name, action_type, callback):
+    def __init__(self, node, action_name, action_type, callback):
         self._action_type = action_type
         self._callback = callback
-        self._server = actionlib.SimpleActionServer(action_name, action_type,
-                                                    self._cb, False)
-        self._server.start()
+        self._server = ActionServer(
+            node,
+            action_type,
+            action_name,
+            self._cb)
 
     def _cb(self, goal):
         self._callback()
-        result = self._action_type().action_result
-        self._server.set_succeeded(result)
+        goal.succeed()
+        return self._action_type().Result()
+
 
 class VelocityControl:
 
-    def __init__(self):
-        self._num_steps = rospy.get_param('~turbo/steps', 1)
+    def __init__(self, node):
+        self._node = node
+        self._num_steps = self._node.declare_parameter('turbo/steps', 1)
 
-        forward_min = rospy.get_param('~turbo/linear_forward_min', 1.0)
-        forward_max = rospy.get_param('~turbo/linear_forward_max', 1.0)
+        forward_min = self._node.declare_parameter('turbo/linear_forward_min', 1.0)
+        forward_max = self._node.declare_parameter('turbo/linear_forward_max', 1.0)
         self._forward = Velocity(forward_min, forward_max, self._num_steps)
 
-        backward_min = rospy.get_param('~turbo/linear_backward_min', forward_min)
-        backward_max = rospy.get_param('~turbo/linear_backward_max', forward_max)
+        backward_min = self._node.declare_parameter('turbo/linear_backward_min', forward_min)
+        backward_max = self._node.declare_parameter('turbo/linear_backward_max', forward_max)
         self._backward = Velocity(backward_min, backward_max, self._num_steps)
 
-        lateral_min = rospy.get_param('~turbo/linear_lateral_min', 1.0)
-        lateral_max = rospy.get_param('~turbo/linear_lateral_max', 1.0)
+        lateral_min = self._node.declare_parameter('turbo/linear_lateral_min', 1.0)
+        lateral_max = self._node.declare_parameter('turbo/linear_lateral_max', 1.0)
         self._lateral = Velocity(lateral_min, lateral_max, self._num_steps)
 
-        angular_min = rospy.get_param('~turbo/angular_min', 1.0)
-        angular_max = rospy.get_param('~turbo/angular_max', 1.0)
+        angular_min = self._node.declare_parameter('turbo/angular_min', 1.0)
+        angular_max = self._node.declare_parameter('turbo/angular_max', 1.0)
         self._angular = Velocity(angular_min, angular_max, self._num_steps)
 
         default_init_step = np.floor((self._num_steps + 1)/2.0)
-        init_step = rospy.get_param('~turbo/init_step', default_init_step)
+        init_step = self._node.declare_parameter('turbo/init_step', default_init_step)
+
         if init_step < 0 or init_step > self._num_steps:
             self._init_step = default_init_step
-            rospy.logwarn('Initial step %d outside range [1, %d]!'
-                    ' Falling back to default %d' %
-                    (init_step, self._num_steps, default_init_step))
+            self._node.get_logger().warn('Initial step %d outside range [1, %d]!'
+                                         ' Falling back to default %d' %
+                                         (init_step, self._num_steps, default_init_step))
         else:
             self._init_step = init_step
+
         self.reset_turbo()
 
     def validate_twist(self, cmd):
         if cmd.linear.z or cmd.angular.x or cmd.angular.y:
-            rospy.logerr("Joystick provided invalid values, only linear.x, linear.y and angular.z may be non-zero.")
+            self._node.get_logger().error(
+                'Joystick provided invalid values, only linear.x, '
+                'linear.y and angular.z may be non-zero.')
             return False
         if abs(cmd.linear.x) > 1.0 or abs(cmd.linear.y) > 1.0 or abs(cmd.angular.z) > 1.0:
-            rospy.logerr("Joystick provided invalid values (%d, %d, %d), not in [-1, 1] range." % (cmd.linear.x, cmd.linear.y, cmd.angular.z))
+            self._node.get_logger().error(
+                "Joystick provided invalid values (%d, %d, %d), not in [-1, 1] range."
+                % (cmd.linear.x, cmd.linear.y, cmd.angular.z))
             return False
         return True
 
@@ -128,13 +144,15 @@ class VelocityControl:
         self._current_step = self._init_step
         self._current_angular_step = self._init_step
 
+
 class TextMarker(object):
 
-    def __init__(self, scale = 1.0, z = 0.0):
-        self._pub = rospy.Publisher('text_marker', Marker, queue_size=1, latch=True)
+    def __init__(self, node, scale=1.0, z=0.0):
+        # TODO latch
+        self._pub = node.create_publisher(Marker, 'text_marker', 1)
 
         self._scale = scale
-        self._z     = z
+        self._z = z
 
         # Build marker
         self._marker = Marker()
@@ -155,50 +173,60 @@ class TextMarker(object):
         self._marker.color.g = 1.0
         self._marker.color.b = 1.0
 
-    def update(self, joystick_priority, add = True):
+    def update(self, joystick_priority, add=True):
         if add:
-            self._marker.action  = Marker.ADD
+            self._marker.action = Marker.ADD
 
             self._marker.text = "Manual" if joystick_priority else "Autonomous"
         else:
-            self._marker.action  = Marker.DELETE
+            self._marker.action = Marker.DELETE
 
         self._pub.publish(self._marker)
 
-class JoystickRelay:
+
+class JoystickRelay(Node):
 
     def __init__(self):
-        self._current_priority = rospy.get_param("~priority", True)
+        super().__init__('joystick_relay')
+
+        self._current_priority = self.declare_parameter('priority', True)
         self._velocity_control = VelocityControl()
 
-        self._marker = TextMarker(0.5, 2.0)
+        self._marker = TextMarker(self, 0.5, 2.0)
 
-        self._pub_cmd = rospy.Publisher('joy_vel_out', Twist, queue_size=1)
-        self._subscriber = rospy.Subscriber('joy_vel_in', Twist, self._forward_cmd, queue_size=1)
+        self._pub_cmd = self.create_publisher(Twist, 'joy_vel_out', 1)
+        self._subscriber = self.create_subscription(Twist, 'joy_vel_in', self._forward_cmd, 1)
 
-        self._pub_priority = rospy.Publisher('joy_priority', Bool, queue_size=1, latch=True)
+        # TODO Latch
+        self._pub_priority = self.create_publisher(Bool, 'joy_priority', 1)
 
         # Wait for subscribers and publish initial joy_priority:
         self._pub_priority.publish(self._current_priority)
         self._marker.update(self._current_priority)
 
         # Marker timer (required to update the marker when the robot doesn't receive velocities):
-        rospy.Timer(rospy.Duration(1.0), self._timer_callback)
+        self._timer = self.create_timer(1.0, self._timer_callback)
 
         # Action servers to change priority & the currently active turbo step.
         # We aren't using services because they aren't supported by joy_teleop.
-        self._server_priority = ServiceLikeActionServer('joy_priority_action', JoyPriorityAction,
-                                                        self._toggle_priority)
-        self._server_increase = ServiceLikeActionServer('joy_turbo_increase', JoyTurboAction,
-                                                        self._velocity_control.increase_turbo)
-        self._server_decrease = ServiceLikeActionServer('joy_turbo_decrease', JoyTurboAction,
-                                                        self._velocity_control.decrease_turbo)
-        self._server_angular_increase = ServiceLikeActionServer('joy_turbo_angular_increase', JoyTurboAction,
-                                                                self._velocity_control.increase_angular_turbo)
-        self._server_angular_decrease = ServiceLikeActionServer('joy_turbo_angular_decrease', JoyTurboAction,
-                                                                self._velocity_control.decrease_angular_turbo)
-        self._server_reset    = ServiceLikeActionServer('joy_turbo_reset', JoyTurboAction,
-                                                        self._velocity_control.reset_turbo)
+        self._server_priority = ServiceLikeActionServer(
+            self, 'joy_priority_action', JoyPriorityAction,
+            self._toggle_priority)
+        self._server_increase = ServiceLikeActionServer(
+            self, 'joy_turbo_increase', JoyTurboAction,
+            self._velocity_control.increase_turbo)
+        self._server_decrease = ServiceLikeActionServer(
+            self, 'joy_turbo_decrease', JoyTurboAction,
+            self._velocity_control.decrease_turbo)
+        self._server_angular_increase = ServiceLikeActionServer(
+            self, 'joy_turbo_angular_increase', JoyTurboAction,
+            self._velocity_control.increase_angular_turbo)
+        self._server_angular_decrease = ServiceLikeActionServer(
+            self, 'joy_turbo_angular_decrease', JoyTurboAction,
+            self._velocity_control.decrease_angular_turbo)
+        self._server_reset = ServiceLikeActionServer(
+            self, 'joy_turbo_reset', JoyTurboAction,
+            self._velocity_control.reset_turbo)
 
     def _forward_cmd(self, cmd):
         if self._current_priority:
@@ -208,7 +236,8 @@ class JoystickRelay:
 
     def _toggle_priority(self):
         self._current_priority = not self._current_priority
-        rospy.loginfo("Toggled joy_priority, current status is: %s", self._current_priority)
+        self.get_logger().info("Toggled joy_priority, current status is: %s",
+                               self._current_priority)
         self._pub_priority.publish(self._current_priority)
         self._marker.update(self._current_priority)
 
@@ -219,9 +248,17 @@ class JoystickRelay:
     def _timer_callback(self, event):
         self._marker.update(self._current_priority)
 
+
+def main(args=None):
+    rclpy.init(args=args)
+
+    node = JoystickRelay()
+
+    rclpy.spin(node)
+
+    node.destroy_node()
+    rclpy.shutdown()
+
+
 if __name__ == '__main__':
-    rospy.init_node('joystick_relay')
-
-    server = JoystickRelay()
-
-    rospy.spin()
+    main()

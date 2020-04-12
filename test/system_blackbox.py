@@ -10,7 +10,7 @@
 # any purpose with or without fee is hereby granted, provided that the
 # above copyright notice and this permission notice appear in all
 # copies.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
 # REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 # MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL ISC BE LIABLE FOR ANY
@@ -25,19 +25,21 @@
 import unittest
 
 import rospy
+import time
+
 from std_msgs.msg import Bool
 from geometry_msgs.msg import Twist
 
 from rate_publishers import RatePublishers, TimeoutManager
 
+
 def twist(x=0.0, r=0.0):
-    """
-    Returns a Twist for the given linear and rotation speed.
-    """
+    """Return a Twist for the given linear and rotation speed."""
     t = Twist()
     t.linear.x = x
     t.angular.z = r
     return t
+
 
 class TestTwistMux(unittest.TestCase):
 
@@ -64,26 +66,31 @@ class TestTwistMux(unittest.TestCase):
 
     def tearDown(self):
         # Reset all topics.
-        t = twist(0, 0)
-        l = Bool(False)
+        twist_msg = twist(0, 0)
+        unlock = Bool(False)
 
-        self._vel1.pub(t)
-        self._vel2.pub(t)
-        self._vel3.pub(t)
+        self._vel1.pub(twist_msg)
+        self._vel2.pub(twist_msg)
+        self._vel3.pub(twist_msg)
 
-        self._lock1.pub(l)
-        self._lock2.pub(l)
+        self._lock1.pub(unlock)
+        self._lock2.pub(unlock)
 
         # Wait for previously published messages to time out,
         # since we aren't restarting twist_mux.
         #
         # This sleeping time must be higher than any of the
         # timeouts in system_test_config.yaml.
-        rospy.sleep(self.MESSAGE_TIMEOUT + self.TOPIC_TIMEOUT)
+        #
+        # TODO(artivis) use rate once available
+        time.sleep(self.MESSAGE_TIMEOUT + self.TOPIC_TIMEOUT)
 
     @classmethod
     def _vel_cmd(cls):
-        rospy.sleep(cls.MESSAGE_TIMEOUT)
+        # TODO(artivis) use rate once available
+        time.sleep(cls.MESSAGE_TIMEOUT)
+        # TODO wait_for_msg-like functionnality not yet available
+        # https://github.com/ros2/rclcpp/issues/520
         return rospy.wait_for_message('cmd_vel_out', Twist,
                                       timeout=cls.MESSAGE_TIMEOUT)
 
@@ -119,6 +126,7 @@ class TestTwistMux(unittest.TestCase):
         self.assertEqual(t1, self._vel_cmd())
 
 # TODO: test limits, test timeouts, etc.
+
 
 if __name__ == '__main__':
     import rostest
