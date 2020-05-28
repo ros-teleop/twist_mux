@@ -25,6 +25,7 @@
 #include <ros/ros.h>
 #include <std_msgs/Bool.h>
 #include <geometry_msgs/Twist.h>
+#include <std_msgs/String.h>
 
 #include <list>
 
@@ -57,7 +58,7 @@ public:
 
   bool hasPriority(const VelocityTopicHandle& twist);
 
-  void publishTwist(const geometry_msgs::TwistConstPtr& msg);
+  void publishTwist(const geometry_msgs::TwistConstPtr& msg, const std::string& name);
 
   void updateDiagnostics(const ros::TimerEvent& event);
 
@@ -82,7 +83,9 @@ protected:
   boost::shared_ptr<velocity_topic_container> velocity_hs_;
   boost::shared_ptr<lock_topic_container>     lock_hs_;
 
-  ros::Publisher cmd_pub_;
+  ros::Publisher cmd_pub_, status_pub_;
+  bool pub_status_continuously_;
+  std::string last_pub_name_, last_locked_name_;
 
   geometry_msgs::Twist last_cmd_;
 
