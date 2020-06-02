@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>twist_mux</name>
-  <version>3.1.0</version>
+  <version>3.1.1</version>
   <description>
       Twist multiplexer, which multiplex several velocity commands (topics) and
       allows to priorize or disable them (locks).
