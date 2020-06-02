@@ -2,6 +2,11 @@
 Changelog for package twist_mux
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Bump CMake version to avoid CMP0048
+* Contributors: Bence Magyar
+
 3.1.0 (2018-06-25)
 ------------------
 
