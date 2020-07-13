@@ -166,8 +166,10 @@ bool TwistMux::hasPriority(const VelocityTopicHandle& twist)
         priority = velocity_priority;
         velocity_name = velocity_h.getName();
       }
-    } else if(last_pub_name_ == velocity_h.getName() &&
-              (pub_status_continuously_ || last_locked_name_ != velocity_h.getName())) {
+    } 
+    else if(last_pub_name_ == velocity_h.getName() &&
+              (pub_status_continuously_ || last_locked_name_ != velocity_h.getName())) 
+    {
         std_msgs::String status;
         status.data = "locked";
         last_pub_name_ = "locked";
