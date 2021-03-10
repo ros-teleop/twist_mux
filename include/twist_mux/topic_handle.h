@@ -85,7 +85,7 @@ public:
    */
   bool hasExpired() const
   {
-    return (timeout_ > 0.0) and
+    return (timeout_ > 0.0) &&
            ((ros::Time::now() - stamp_).toSec() > timeout_);
   }
 
