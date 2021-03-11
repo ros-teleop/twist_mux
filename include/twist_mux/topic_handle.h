@@ -85,7 +85,7 @@ public:
    */
   bool hasExpired() const
   {
-    return (timeout_ > 0.0) and
+    return (timeout_ > 0.0) &&
            ((ros::Time::now() - stamp_).toSec() > timeout_);
   }
 
@@ -155,7 +155,7 @@ public:
 
   bool isMasked(priority_type lock_priority) const
   {
-    return hasExpired() or (getPriority() < lock_priority);
+    return hasExpired() || (getPriority() < lock_priority);
   }
 
   void callback(const geometry_msgs::TwistConstPtr& msg)
@@ -194,7 +194,7 @@ public:
    */
   bool isLocked() const
   {
-    return hasExpired() or getMessage().data;
+    return hasExpired() || getMessage().data;
   }
 
   void callback(const std_msgs::BoolConstPtr& msg)
