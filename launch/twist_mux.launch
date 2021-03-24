@@ -12,6 +12,8 @@
   <node pkg="twist_mux" type="twist_mux" name="twist_mux" output="screen">
     <remap from="cmd_vel_out" to="$(arg cmd_vel_out)"/>
 
+    <param name="pub_status_continuously" value="false"/>
+
     <rosparam file="$(arg config_locks)"  command="load"/>
     <rosparam file="$(arg config_topics)" command="load"/>
   </node>
