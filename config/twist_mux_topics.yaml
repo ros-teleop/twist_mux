@@ -4,6 +4,7 @@
 # - topic   : input topic of geometry_msgs::Twist type
 # - timeout : timeout in seconds to start discarding old messages, and use 0.0 speed instead
 # - priority: priority in the range [0, 255]; the higher the more priority over other topics
+# - flag    : flags the cmd_vel type [0, 127]; (0 - auto /// 1 - user /// 2 - sudo /// ...)
 
 topics:
 -
@@ -11,18 +12,22 @@ topics:
   topic   : nav_vel
   timeout : 0.5
   priority: 10
+  flag    : 0
 -
   name    : joystick
   topic   : joy_vel
   timeout : 0.5
   priority: 100
+  flag    : 2
 -
   name    : keyboard
   topic   : key_vel
   timeout : 0.5
   priority: 90
+  flag    : 1
 -
   name    : tablet
   topic   : tab_vel
   timeout : 0.5
   priority: 100
+  flag    : 1
