@@ -17,13 +17,16 @@
 /*
  * @author Enrique Fernandez
  * @author Siegfried Gevatter
- */
+ *
+ * Modified by Joao Aguizo, 15th April 2021
+*/
 
 #ifndef TOPIC_HANDLE_H
 #define TOPIC_HANDLE_H
 
 #include <ros/ros.h>
 #include <std_msgs/Bool.h>
+#include <std_msgs/UInt8.h>
 #include <geometry_msgs/Twist.h>
 
 #include <twist_mux/utils.h>
@@ -44,6 +47,7 @@ class TopicHandle_ : boost::noncopyable
 public:
 
   typedef int priority_type;
+  typedef int flag_type;
 
   /**
    * @brief TopicHandle_
@@ -54,13 +58,15 @@ public:
    * that initially the message stamp is set to 0.0, so the message has
    * expired
    * @param priority Priority of the topic
+   * @param flag Flags the type of the source
    */
-  TopicHandle_(ros::NodeHandle& nh, const std::string& name, const std::string& topic, double timeout, priority_type priority, TwistMux* mux)
+  TopicHandle_(ros::NodeHandle& nh, const std::string& name, const std::string& topic, double timeout, priority_type priority, flag_type flag, TwistMux* mux)
     : nh_(nh)
     , name_(name)
     , topic_(topic)
     , timeout_(timeout)
     , priority_(clamp(priority, priority_type(0), priority_type(255)))
+    , flag_(clamp(flag, flag_type(0), flag_type(255)))
     , mux_(mux)
     , stamp_(0.0)
   {
@@ -68,13 +74,16 @@ public:
     (
       "Topic handler '" << name_ << "' subscribed to topic '" << topic_ <<
       "': timeout = " << ((timeout_) ? std::to_string(timeout_) + "s" : "None") <<
-      ", priority = " << static_cast<int>(priority_)
+      ", priority = " << static_cast<int>(priority_) <<
+      ", flag = " << static_cast<int>(flag_)
     );
+    publisher_ = nh.advertise<std_msgs::UInt8>("flag", 1); // make topic name configurable?
   }
 
   virtual ~TopicHandle_()
   {
     subscriber_.shutdown();
+    publisher_.shutdown();
   }
 
   /**
@@ -129,14 +138,17 @@ protected:
   std::string name_;
   std::string topic_;
   ros::Subscriber subscriber_;
+  ros::Publisher publisher_;
   double timeout_;
   priority_type priority_;
+  flag_type flag_;
 
 protected:
   TwistMux* mux_;
 
   ros::Time stamp_;
   T msg_;
+  std_msgs::UInt8 flag_msg_;
 };
 
 class VelocityTopicHandle : public TopicHandle_<geometry_msgs::Twist>
@@ -146,9 +158,10 @@ private:
 
 public:
   typedef typename base_type::priority_type priority_type;
+  typedef typename base_type::flag_type flag_type;
 
-  VelocityTopicHandle(ros::NodeHandle& nh, const std::string& name, const std::string& topic, double timeout, priority_type priority, TwistMux* mux)
-    : base_type(nh, name, topic, timeout, priority, mux)
+  VelocityTopicHandle(ros::NodeHandle& nh, const std::string& name, const std::string& topic, double timeout, priority_type priority, flag_type flag, TwistMux* mux)
+    : base_type(nh, name, topic, timeout, priority, clamp(flag, flag_type(0), flag_type(127)), mux)
   {
     subscriber_ = nh_.subscribe(topic_, 1, &VelocityTopicHandle::callback, this);
   }
@@ -170,6 +183,10 @@ public:
     if (mux_->hasPriority(*this))
     {
       mux_->publishTwist(msg);
+      
+      // Also publishes the topic flag
+      flag_msg_.data = flag_;
+      publisher_.publish(flag_msg_);
     }
   }
 };
@@ -181,9 +198,10 @@ private:
 
 public:
   typedef typename base_type::priority_type priority_type;
+  typedef typename base_type::flag_type flag_type;
 
-  LockTopicHandle(ros::NodeHandle& nh, const std::string& name, const std::string& topic, double timeout, priority_type priority, TwistMux* mux)
-    : base_type(nh, name, topic, timeout, priority, mux)
+  LockTopicHandle(ros::NodeHandle& nh, const std::string& name, const std::string& topic, double timeout, priority_type priority, flag_type flag, TwistMux* mux)
+    : base_type(nh, name, topic, timeout, priority, clamp(flag, flag_type(128), flag_type(255)), mux)
   {
     subscriber_ = nh_.subscribe(topic_, 1, &LockTopicHandle::callback, this);
   }
@@ -199,8 +217,12 @@ public:
 
   void callback(const std_msgs::BoolConstPtr& msg)
   {
-    stamp_ = ros::Time::now();
-    msg_   = *msg;
+    stamp_         = ros::Time::now();
+    msg_           = *msg;
+    
+    // Also publishes the topic flag
+    flag_msg_.data = flag_;
+    publisher_.publish(flag_msg_);
   }
 };
 

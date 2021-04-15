@@ -97,6 +97,7 @@ void TwistMux::getTopicHandles(ros::NodeHandle& nh, ros::NodeHandle& nh_priv, co
     std::string name, topic;
     double timeout;
     int priority;
+    int flag;
     for (int i = 0; i < output.size(); ++i)
     {
       xh::getArrayItem(output, i, output_i);
@@ -105,8 +106,9 @@ void TwistMux::getTopicHandles(ros::NodeHandle& nh, ros::NodeHandle& nh_priv, co
       xh::getStructMember(output_i, "topic"   , topic   );
       xh::getStructMember(output_i, "timeout" , timeout );
       xh::getStructMember(output_i, "priority", priority);
+      xh::getStructMember(output_i, "flag"    , flag);
 
-      topic_hs.emplace_back(nh, name, topic, timeout, priority, this);
+      topic_hs.emplace_back(nh, name, topic, timeout, priority, flag, this);
     }
   }
   catch (const xh::XmlrpcHelperException& e)

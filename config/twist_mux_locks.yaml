@@ -7,6 +7,7 @@
 #                       to detect that, and if the publisher dies we will enable the lock
 # - priority: priority in the range [0, 255], so all the topics with priority lower than it
 #             will be stopped/disabled
+# - flag: flag in the range [128, 255], (...)
 
 locks:
 -
@@ -15,14 +16,17 @@ locks:
   timeout : 0.0
   # Same priority as joystick control, so it'll not block it.
   priority: 100
+  flag    : 128
 -
   name    : loop_closure
   topic   : stop_closing_loop
   timeout : 0.0
   priority: 200
+  flag    : 128
 -
   name    : joystick 
   topic   : joy_priority
   timeout : 0.0
   priority: 100
+  flag    : 128
 
