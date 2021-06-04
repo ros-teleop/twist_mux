@@ -1,10 +1,22 @@
-#! /usr/bin/python
+#! /usr/bin/python3
 # -*- coding: utf-8 -*-
 
 #
 # twist_mux: joystick_relay.py
 #
-# Copyright (c) 2013 PAL Robotics SL. All Rights Reserved
+# Copyright (c) 2020 PAL Robotics S.L. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 #
 # Authors:
 #   * Enrique Fernandez
@@ -19,7 +31,7 @@ from geometry_msgs.msg import Twist
 from rclpy.action import ActionServer
 from rclpy.node import Node
 from std_msgs.msg import Bool
-from twist_mux_msgs.msg import JoyPriorityAction, JoyTurboAction
+from twist_mux_msgs.action import JoyPriority, JoyTurbo
 from visualization_msgs.msg import Marker
 
 
@@ -210,22 +222,22 @@ class JoystickRelay(Node):
         # Action servers to change priority & the currently active turbo step.
         # We aren't using services because they aren't supported by joy_teleop.
         self._server_priority = ServiceLikeActionServer(
-            self, 'joy_priority_action', JoyPriorityAction,
+            self, 'joy_priority_action', JoyPriority,
             self._toggle_priority)
         self._server_increase = ServiceLikeActionServer(
-            self, 'joy_turbo_increase', JoyTurboAction,
+            self, 'joy_turbo_increase', JoyTurbo,
             self._velocity_control.increase_turbo)
         self._server_decrease = ServiceLikeActionServer(
-            self, 'joy_turbo_decrease', JoyTurboAction,
+            self, 'joy_turbo_decrease', JoyTurbo,
             self._velocity_control.decrease_turbo)
         self._server_angular_increase = ServiceLikeActionServer(
-            self, 'joy_turbo_angular_increase', JoyTurboAction,
+            self, 'joy_turbo_angular_increase', JoyTurbo,
             self._velocity_control.increase_angular_turbo)
         self._server_angular_decrease = ServiceLikeActionServer(
-            self, 'joy_turbo_angular_decrease', JoyTurboAction,
+            self, 'joy_turbo_angular_decrease', JoyTurbo,
             self._velocity_control.decrease_angular_turbo)
         self._server_reset = ServiceLikeActionServer(
-            self, 'joy_turbo_reset', JoyTurboAction,
+            self, 'joy_turbo_reset', JoyTurbo,
             self._velocity_control.reset_turbo)
 
     def _forward_cmd(self, cmd):
