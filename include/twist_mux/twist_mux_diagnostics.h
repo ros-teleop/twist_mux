@@ -27,6 +27,8 @@
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
 
+#include <memory>
+
 namespace twist_mux
 {
 class TwistMuxDiagnostics
@@ -34,17 +36,17 @@ class TwistMuxDiagnostics
 public:
   typedef TwistMuxDiagnosticsStatus status_type;
 
-  static constexpr double MAIN_LOOP_TIME_MIN = 0.2;  // [s]
+  static constexpr double MAIN_LOOP_TIME_MIN = 0.2;   // [s]
   static constexpr double READING_AGE_MIN = 3.0;     // [s]
 
-  TwistMuxDiagnostics(TwistMux* mux);
+  explicit TwistMuxDiagnostics(TwistMux * mux);
   virtual ~TwistMuxDiagnostics() = default;
 
-  void diagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat);
+  void diagnostics(diagnostic_updater::DiagnosticStatusWrapper & stat);
 
   void update();
 
-  void updateStatus(const status_type::ConstPtr& status);
+  void updateStatus(const status_type::ConstPtr & status);
 
 private:
   /**

@@ -31,22 +31,23 @@
 #include <twist_mux/utils.h>
 #include <twist_mux/twist_mux.h>
 
+#include <memory>
 #include <string>
 #include <vector>
 
 namespace twist_mux
 {
-template <typename T>
+template<typename T>
 class TopicHandle_
 {
 public:
   // Not copy constructible
-  TopicHandle_(TopicHandle_&) = delete;
-  TopicHandle_(const TopicHandle_&) = delete;
+  TopicHandle_(TopicHandle_ &) = delete;
+  TopicHandle_(const TopicHandle_ &) = delete;
 
   // Not copy assignable
-  TopicHandle_& operator=(TopicHandle_&) = delete;
-  TopicHandle_& operator=(const TopicHandle_&) = delete;
+  TopicHandle_ & operator=(TopicHandle_ &) = delete;
+  TopicHandle_ & operator=(const TopicHandle_ &) = delete;
 
   typedef int priority_type;
 
@@ -60,19 +61,22 @@ public:
    * expired
    * @param priority Priority of the topic
    */
-  TopicHandle_(const std::string& name, const std::string& topic, const rclcpp::Duration& timeout,
-               priority_type priority, TwistMux* mux)
-    : name_(name)
-    , topic_(topic)
-    , timeout_(timeout)
-    , priority_(clamp(priority, priority_type(0), priority_type(255)))
-    , mux_(mux)
-    , stamp_(0)
+  TopicHandle_(
+    const std::string & name, const std::string & topic, const rclcpp::Duration & timeout,
+    priority_type priority, TwistMux * mux)
+  : name_(name),
+    topic_(topic),
+    timeout_(timeout),
+    priority_(clamp(priority, priority_type(0), priority_type(255))),
+    mux_(mux),
+    stamp_(0)
   {
-    RCLCPP_INFO(mux_->get_logger(), "Topic handler '%s' subscribed to topic '%s': timeout = %s , priority = %d.",
-                name_.c_str(), topic_.c_str(),
-                ((timeout_.seconds() > 0) ? std::to_string(timeout_.seconds()) + "s" : "None").c_str(),
-                static_cast<int>(priority_));
+    RCLCPP_INFO(
+      mux_->get_logger(),
+      "Topic handler '%s' subscribed to topic '%s': timeout = %s , priority = %d.",
+      name_.c_str(), topic_.c_str(),
+      ((timeout_.seconds() > 0) ? std::to_string(timeout_.seconds()) + "s" : "None").c_str(),
+      static_cast<int>(priority_));
   }
 
   virtual ~TopicHandle_() = default;
@@ -85,20 +89,21 @@ public:
    */
   bool hasExpired() const
   {
-    return (timeout_.seconds() > 0.0) and ((mux_->now().seconds() - stamp_.seconds()) > timeout_.seconds());
+    return (timeout_.seconds() > 0.0) && (
+      (mux_->now().seconds() - stamp_.seconds()) > timeout_.seconds());
   }
 
-  const std::string& getName() const
+  const std::string & getName() const
   {
     return name_;
   }
 
-  const std::string& getTopic() const
+  const std::string & getTopic() const
   {
     return topic_;
   }
 
-  const rclcpp::Duration& getTimeout() const
+  const rclcpp::Duration & getTimeout() const
   {
     return timeout_;
   }
@@ -107,17 +112,17 @@ public:
    * @brief getPriority Priority getter
    * @return Priority
    */
-  const priority_type& getPriority() const
+  const priority_type & getPriority() const
   {
     return priority_;
   }
 
-  const T& getStamp() const
+  const T & getStamp() const
   {
     return stamp_;
   }
 
-  const T& getMessage() const
+  const T & getMessage() const
   {
     return msg_;
   }
@@ -147,21 +152,24 @@ private:
 public:
   typedef typename base_type::priority_type priority_type;
 
-  VelocityTopicHandle(const std::string& name, const std::string& topic, const rclcpp::Duration& timeout,
-                      priority_type priority, TwistMux* mux)
-    : base_type(name, topic, timeout, priority, mux)
+  VelocityTopicHandle(
+    const std::string & name, const std::string & topic, const rclcpp::Duration & timeout,
+    priority_type priority, TwistMux * mux)
+  : base_type(name, topic, timeout, priority, mux)
   {
     subscriber_ = mux_->create_subscription<geometry_msgs::msg::Twist>(
-        topic_, rclcpp::SystemDefaultsQoS(), std::bind(&VelocityTopicHandle::callback, this, std::placeholders::_1));
+      topic_, rclcpp::SystemDefaultsQoS(),
+      std::bind(&VelocityTopicHandle::callback, this, std::placeholders::_1));
 
     // subscriber_ = nh_.create_subscription<geometry_msgs::msg::Twist>(
-    //    topic_, twist_qos_profile, std::bind(&VelocityTopicHandle::callback, this, std::placeholders::_1));
+    //    topic_, twist_qos_profile,
+    //  std::bind(&VelocityTopicHandle::callback, this, std::placeholders::_1));
   }
 
   bool isMasked(priority_type lock_priority) const
   {
     // std::cout << hasExpired() << " / " << (getPriority() < lock_priority) << std::endl;
-    return hasExpired() or (getPriority() < lock_priority);
+    return hasExpired() || (getPriority() < lock_priority);
   }
 
   void callback(const geometry_msgs::msg::Twist::ConstSharedPtr msg)
@@ -173,12 +181,11 @@ public:
     // Note that we have to check all the locks because they might time out
     // and since we have several topics we must look for the highest one in
     // all the topic list; so far there's no O(1) solution.
-    if (mux_->hasPriority(*this))
-    {
+    if (mux_->hasPriority(*this)) {
       mux_->publishTwist(msg);
     }
   }
-};
+}
 
 class LockTopicHandle : public TopicHandle_<std_msgs::msg::Bool>
 {
@@ -191,12 +198,14 @@ private:
 public:
   typedef typename base_type::priority_type priority_type;
 
-  LockTopicHandle(const std::string& name, const std::string& topic, const rclcpp::Duration& timeout,
-                  priority_type priority, TwistMux* mux)
-    : base_type(name, topic, timeout, priority, mux)
+  LockTopicHandle(
+    const std::string & name, const std::string & topic, const rclcpp::Duration & timeout,
+    priority_type priority, TwistMux * mux)
+  : base_type(name, topic, timeout, priority, mux)
   {
     subscriber_ = mux_->create_subscription<std_msgs::msg::Bool>(
-        topic_, rclcpp::SystemDefaultsQoS(), std::bind(&LockTopicHandle::callback, this, std::placeholders::_1));
+      topic_, rclcpp::SystemDefaultsQoS(),
+      std::bind(&LockTopicHandle::callback, this, std::placeholders::_1));
   }
 
   /**
@@ -205,7 +214,7 @@ public:
    */
   bool isLocked() const
   {
-    return hasExpired() or getMessage().data;
+    return hasExpired() || getMessage().data;
   }
 
   void callback(const std_msgs::msg::Bool::ConstSharedPtr msg)
@@ -213,7 +222,7 @@ public:
     stamp_ = mux_->now();
     msg_ = *msg;
   }
-};
+}
 
 }  // namespace twist_mux
 

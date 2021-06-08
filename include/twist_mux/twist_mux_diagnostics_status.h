@@ -28,6 +28,8 @@
 
 #include <rclcpp/rclcpp.hpp>
 
+#include <memory>
+
 namespace twist_mux
 {
 struct TwistMuxDiagnosticsStatus
@@ -45,10 +47,10 @@ struct TwistMuxDiagnosticsStatus
   std::shared_ptr<TwistMux::lock_topic_container> lock_hs;
 
   TwistMuxDiagnosticsStatus()
-    : reading_age(0)
-    , last_loop_update(rclcpp::Clock().now())
-    , main_loop_time(0)
-    , priority(0)
+  : reading_age(0),
+    last_loop_update(rclcpp::Clock().now()),
+    main_loop_time(0),
+    priority(0)
   {
     velocity_hs = std::make_shared<TwistMux::velocity_topic_container>();
     lock_hs = std::make_shared<TwistMux::lock_topic_container>();

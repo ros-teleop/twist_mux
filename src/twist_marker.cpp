@@ -25,12 +25,14 @@
 #include <visualization_msgs/msg/marker.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
 
+#include <memory>
 #include <string>
 
 class TwistMarker
 {
 public:
-  TwistMarker(std::string& frame_id, double scale, double z) : frame_id_(frame_id), scale_(scale), z_(z)
+  TwistMarker(std::string & frame_id, double scale, double z)
+  : frame_id_(frame_id), scale_(scale), z_(z)
   {
     // ID and type:
     marker_.id = 0;
@@ -59,19 +61,20 @@ public:
     marker_.points[1].z = 0.01;
   }
 
-  void update(const geometry_msgs::msg::Twist& twist)
+  void update(const geometry_msgs::msg::Twist & twist)
   {
     using std::abs;
 
     marker_.points[1].x = twist.linear.x;
 
-    if (abs(twist.linear.y) > abs(twist.angular.z))
+    if (abs(twist.linear.y) > abs(twist.angular.z)) {
       marker_.points[1].y = twist.linear.y;
-    else
+    } else {
       marker_.points[1].y = twist.angular.z;
+    }
   }
 
-  const visualization_msgs::msg::Marker& getMarker()
+  const visualization_msgs::msg::Marker & getMarker()
   {
     return marker_;
   }
@@ -87,7 +90,8 @@ private:
 class TwistMarkerPublisher : public rclcpp::Node
 {
 public:
-  TwistMarkerPublisher() : Node("twist_marker")
+  TwistMarkerPublisher()
+  : Node("twist_marker")
   {
     std::string frame_id;
     double scale;
@@ -104,9 +108,13 @@ public:
     marker_ = std::make_shared<TwistMarker>(frame_id, scale, z);
 
     sub_ = this->create_subscription<geometry_msgs::msg::Twist>(
-        "twist", rclcpp::SystemDefaultsQoS(), std::bind(&TwistMarkerPublisher::callback, this, std::placeholders::_1));
+      "twist", rclcpp::SystemDefaultsQoS(),
+      std::bind(&TwistMarkerPublisher::callback, this, std::placeholders::_1));
 
-    pub_ = this->create_publisher<visualization_msgs::msg::Marker>("marker", rclcpp::QoS(rclcpp::KeepLast(1)));
+    pub_ =
+      this->create_publisher<visualization_msgs::msg::Marker>(
+      "marker",
+      rclcpp::QoS(rclcpp::KeepLast(1)));
   }
 
   void callback(const geometry_msgs::msg::Twist::ConstSharedPtr twist)
@@ -123,7 +131,7 @@ private:
   std::shared_ptr<TwistMarker> marker_ = nullptr;
 };
 
-int main(int argc, char* argv[])
+int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
 

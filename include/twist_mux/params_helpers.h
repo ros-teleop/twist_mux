@@ -41,26 +41,30 @@
 #define TWIST_MUX__PARAMS_HELPERS_H_
 
 #include <rclcpp/rclcpp.hpp>
+
+#include <memory>
 #include <sstream>
+#include <string>
 
 namespace twist_mux
 {
 class ParamsHelperException : public std::runtime_error
 {
 public:
-  ParamsHelperException(const std::string& what) : std::runtime_error(what)
+  explicit ParamsHelperException(const std::string & what)
+  : std::runtime_error(what)
   {
   }
 };
 
-template <class T>
-void fetch_param(std::shared_ptr<rclcpp::Node> nh, const std::string& param_name, T& output)
+template<class T>
+void fetch_param(std::shared_ptr<rclcpp::Node> nh, const std::string & param_name, T & output)
 {
   rclcpp::Parameter param;
-  if (!nh->get_parameter(param_name, param))
-  {
+  if (!nh->get_parameter(param_name, param)) {
     std::ostringstream err_msg;
-    err_msg << "could not load parameter '" << param_name << "'. (namespace: " << nh->get_namespace() << ")";
+    err_msg << "could not load parameter '" << param_name << "'. (namespace: " <<
+      nh->get_namespace() << ")";
     throw ParamsHelperException(err_msg.str());
   }
 

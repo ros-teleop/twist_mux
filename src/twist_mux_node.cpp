@@ -22,7 +22,9 @@
 
 #include <twist_mux/twist_mux.h>
 
-int main(int argc, char* argv[])
+#include <memory>
+
+int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
 

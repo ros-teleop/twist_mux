@@ -28,11 +28,10 @@
 #include <geometry_msgs/msg/twist.hpp>
 
 #include <list>
+#include <memory>
+#include <string>
 
-namespace
-{
-using namespace std::chrono_literals;
-}
+using std::chrono_literals::operator""s;
 
 namespace twist_mux
 {
@@ -49,20 +48,20 @@ class LockTopicHandle;
 class TwistMux : public rclcpp::Node
 {
 public:
-  template <typename T>
+  template<typename T>
   using handle_container = std::list<T>;
 
   using velocity_topic_container = handle_container<VelocityTopicHandle>;
   using lock_topic_container = handle_container<LockTopicHandle>;
 
-  TwistMux(int window_size = 10);
+  explicit TwistMux(int window_size = 10);
   ~TwistMux() = default;
 
   void init();
 
-  bool hasPriority(const VelocityTopicHandle& twist);
+  bool hasPriority(const VelocityTopicHandle & twist);
 
-  void publishTwist(const geometry_msgs::msg::Twist::ConstSharedPtr& msg);
+  void publishTwist(const geometry_msgs::msg::Twist::ConstSharedPtr & msg);
 
   void updateDiagnostics();
 
@@ -72,7 +71,7 @@ protected:
 
   rclcpp::TimerBase::SharedPtr diagnostics_timer_;
 
-  static constexpr std::chrono::duration<long int> DIAGNOSTICS_PERIOD = 1s;
+  static constexpr std::chrono::duration<int64_t> DIAGNOSTICS_PERIOD = 1s;
 
   /**
    * @brief velocity_hs_ Velocity topics' handles.
@@ -87,8 +86,8 @@ protected:
 
   geometry_msgs::msg::Twist last_cmd_;
 
-  template <typename T>
-  void getTopicHandles(const std::string& param_name, handle_container<T>& topic_hs);
+  template<typename T>
+  void getTopicHandles(const std::string & param_name, handle_container<T> & topic_hs);
 
   int getLockPriority();
 

@@ -27,6 +27,10 @@
 #include <twist_mux/utils.h>
 #include <twist_mux/params_helpers.h>
 
+#include <list>
+#include <memory>
+#include <string>
+
 /**
  * @brief hasIncreasedAbsVelocity Check if the absolute velocity has increased
  * in any of the components: linear (abs(x)) or angular (abs(yaw))
@@ -34,7 +38,9 @@
  * @param new_twist New velocity
  * @return true is any of the absolute velocity components has increased
  */
-bool hasIncreasedAbsVelocity(const geometry_msgs::msg::Twist& old_twist, const geometry_msgs::msg::Twist& new_twist)
+bool hasIncreasedAbsVelocity(
+  const geometry_msgs::msg::Twist & old_twist,
+  const geometry_msgs::msg::Twist & new_twist)
 {
   const auto old_linear_x = std::abs(old_twist.linear.x);
   const auto new_linear_x = std::abs(new_twist.linear.x);
@@ -42,17 +48,18 @@ bool hasIncreasedAbsVelocity(const geometry_msgs::msg::Twist& old_twist, const g
   const auto old_angular_z = std::abs(old_twist.angular.z);
   const auto new_angular_z = std::abs(new_twist.angular.z);
 
-  return (old_linear_x < new_linear_x) or (old_angular_z < new_angular_z);
+  return (old_linear_x < new_linear_x) || (old_angular_z < new_angular_z);
 }
 
 namespace twist_mux
 {
 // see e.g. https://stackoverflow.com/a/40691657
-constexpr std::chrono::duration<long int> TwistMux::DIAGNOSTICS_PERIOD;
+constexpr std::chrono::duration<int64_t> TwistMux::DIAGNOSTICS_PERIOD;
 
 TwistMux::TwistMux(int window_size)
-  : Node("twist_mux", "",
-         rclcpp::NodeOptions().allow_undeclared_parameters(true).automatically_declare_parameters_from_overrides(true))
+: Node("twist_mux", "",
+    rclcpp::NodeOptions().allow_undeclared_parameters(
+      true).automatically_declare_parameters_from_overrides(true))
 {
 }
 
@@ -65,7 +72,10 @@ void TwistMux::init()
   getTopicHandles("locks", *lock_hs_);
 
   /// Publisher for output topic:
-  cmd_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel_out", rclcpp::QoS(rclcpp::KeepLast(1)));
+  cmd_pub_ =
+    this->create_publisher<geometry_msgs::msg::Twist>(
+    "cmd_vel_out",
+    rclcpp::QoS(rclcpp::KeepLast(1)));
 
   /// Diagnostics:
   diagnostics_ = std::make_shared<diagnostics_type>(this);
@@ -73,7 +83,10 @@ void TwistMux::init()
   status_->velocity_hs = velocity_hs_;
   status_->lock_hs = lock_hs_;
 
-  diagnostics_timer_ = this->create_wall_timer(DIAGNOSTICS_PERIOD, [this]() -> void { updateDiagnostics(); });
+  diagnostics_timer_ = this->create_wall_timer(
+    DIAGNOSTICS_PERIOD, [this]() -> void {
+      updateDiagnostics();
+    });
 }
 
 void TwistMux::updateDiagnostics()
@@ -82,29 +95,27 @@ void TwistMux::updateDiagnostics()
   diagnostics_->updateStatus(status_);
 }
 
-void TwistMux::publishTwist(const geometry_msgs::msg::Twist::ConstSharedPtr& msg)
+void TwistMux::publishTwist(const geometry_msgs::msg::Twist::ConstSharedPtr & msg)
 {
   cmd_pub_->publish(*msg);
 }
 
-template <typename T>
-void TwistMux::getTopicHandles(const std::string& param_name, std::list<T>& topic_hs)
+template<typename T>
+void TwistMux::getTopicHandles(const std::string & param_name, std::list<T> & topic_hs)
 {
   RCLCPP_DEBUG(get_logger(), "getTopicHandles: %s", param_name.c_str());
 
-  rcl_interfaces::msg::ListParametersResult list = list_parameters({ param_name }, 10);
+  rcl_interfaces::msg::ListParametersResult list = list_parameters({param_name}, 10);
 
-  try
-  {
-    for (auto prefix : list.prefixes)
-    {
+  try {
+    for (auto prefix : list.prefixes) {
       RCLCPP_DEBUG(get_logger(), "Prefix: %s", prefix.c_str());
 
       std::string topic;
       double timeout = 0;
       int priority = 0;
 
-      auto nh = std::shared_ptr<rclcpp::Node>(this, [](rclcpp::Node*) {});
+      auto nh = std::shared_ptr<rclcpp::Node>(this, [](rclcpp::Node *) {});
 
       fetch_param(nh, prefix + ".topic", topic);
       fetch_param(nh, prefix + ".timeout", timeout);
@@ -116,9 +127,7 @@ void TwistMux::getTopicHandles(const std::string& param_name, std::list<T>& topi
 
       topic_hs.emplace_back(prefix, topic, std::chrono::duration<double>(timeout), priority, this);
     }
-  }
-  catch (const ParamsHelperException& e)
-  {
+  } catch (const ParamsHelperException & e) {
     RCLCPP_FATAL(get_logger(), "Error parsing params '%s':\n\t%s", param_name.c_str(), e.what());
     throw e;
   }
@@ -130,13 +139,10 @@ int TwistMux::getLockPriority()
 
   /// max_element on the priority of lock topic handles satisfying
   /// that is locked:
-  for (const auto& lock_h : *lock_hs_)
-  {
-    if (lock_h.isLocked())
-    {
+  for (const auto & lock_h : *lock_hs_) {
+    if (lock_h.isLocked()) {
       auto tmp = lock_h.getPriority();
-      if (priority < tmp)
-      {
+      if (priority < tmp) {
         priority = tmp;
       }
     }
@@ -147,7 +153,7 @@ int TwistMux::getLockPriority()
   return priority;
 }
 
-bool TwistMux::hasPriority(const VelocityTopicHandle& twist)
+bool TwistMux::hasPriority(const VelocityTopicHandle & twist)
 {
   const auto lock_priority = getLockPriority();
 
@@ -156,13 +162,10 @@ bool TwistMux::hasPriority(const VelocityTopicHandle& twist)
 
   /// max_element on the priority of velocity topic handles satisfying
   /// that is NOT masked by the lock priority:
-  for (const auto& velocity_h : *velocity_hs_)
-  {
-    if (not velocity_h.isMasked(lock_priority))
-    {
+  for (const auto & velocity_h : *velocity_hs_) {
+    if (!velocity_h.isMasked(lock_priority)) {
       const auto velocity_priority = velocity_h.getPriority();
-      if (priority < velocity_priority)
-      {
+      if (priority < velocity_priority) {
         priority = velocity_priority;
         velocity_name = velocity_h.getName();
       }
