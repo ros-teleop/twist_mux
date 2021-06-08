@@ -1,24 +1,19 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
+# Copyright (c) 2020 PAL Robotics S.L. All rights reserved.
 #
-# twist_mux: rate_publishers.py
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# Copyright (c) 2014 PAL Robotics SL.
-# All Rights Reserved
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-# Permission to use, copy, modify, and/or distribute this software for
-# any purpose with or without fee is hereby granted, provided that the
-# above copyright notice and this permission notice appear in all
-# copies.
-#
-# THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
-# REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL ISC BE LIABLE FOR ANY
-# SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT
-# OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
 # Authors:
 #   * Siegfried-A. Gevatter
 
@@ -43,7 +38,8 @@ class _RatePublisher(Node):
         latching_qos = QoSProfile(
             depth=1,
             durability=QoSDurabilityPolicy.RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL)
-        self._publisher = self.create_publisher(msg_type, topic, qos_profile=latching_qos)
+        self._publisher = self.create_publisher(
+            msg_type, topic, qos_profile=latching_qos)
         self._message = None
         self._period = None  # 1 / freq
         self._last_pub = 0
@@ -79,8 +75,7 @@ class _RatePublisher(Node):
 
 class RatePublishers(object):
     """
-    A class for managing several ROS publishers repeating messages
-    with different rates.
+    Manages several ROS publishers repeating messages with different rates.
 
     The main purpose of this class is for unit testing.
     """
@@ -91,7 +86,7 @@ class RatePublishers(object):
 
     def add_topic(self, topic, msg_type):
         """
-        Adds a topic for future publication.
+        Add a topic for future publication.
 
         This creates a rospy.Publisher internally. Note that the
         publisher will latch the topic; if that wasn't the case,
@@ -100,13 +95,14 @@ class RatePublishers(object):
         connect.
         """
         assert topic not in self._publishers
-        rate_publisher = _RatePublisher(topic, msg_type, self._context, latch=True)
+        rate_publisher = _RatePublisher(
+            topic, msg_type, self._context, latch=True)
         self._publishers[topic] = rate_publisher
         return rate_publisher
 
     def pub(self, topic, message, rate=None):
         """
-        Publishes `message' on the given topic.
+        Publish `message' on the given topic.
 
         If `rate' is not None, the message will be repeated at the
         given rate (expected to be in Hz) until pub() or stop()
@@ -118,15 +114,14 @@ class RatePublishers(object):
         self._publishers[topic].pub(message, rate)
 
     def stop(self, topic):
-        """
-        Stops repeating any message on the given topic.
-        """
+        """Stop repeating any message on the given topic."""
         self._publishers[topic].stop()
 
     def spin_once(self):
         """
-        Publishes any scheduled messages and returns the amount of
-        time until it should be called again.
+        Publish scheduled messages.
+
+        Return the amount of time until it should be called again.
         """
         # TODO: Create a class that spawns a global thread and provides
         #       createTimer and createWallTimer, just like NodeHandle

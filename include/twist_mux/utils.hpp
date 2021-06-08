@@ -29,24 +29,30 @@
 /*
  * @author Enrique Fernandez
  * @author Siegfried Gevatter
- * @author Jeremie Deray
  */
 
-#include <twist_mux/twist_mux.hpp>
+#ifndef TWIST_MUX__UTILS_HPP_
+#define TWIST_MUX__UTILS_HPP_
 
-#include <memory>
+// This could be taken from #include <boost/algorithm/clamp.hpp>
+// but it seems that all versions of Boost have it.
 
-int main(int argc, char * argv[])
+/**
+ * @brief Clamp a value to the range [min, max]
+ * @param x Value
+ * @param min Min value of the range [min, max]
+ * @param max Max value of the range [min, max]
+ * @return Value clamped to the range [min, max]
+ */
+template<typename T>
+static T clamp(T x, T min, T max)
 {
-  rclcpp::init(argc, argv);
-
-  auto twist_mux_node = std::make_shared<twist_mux::TwistMux>();
-
-  twist_mux_node->init();
-
-  rclcpp::spin(twist_mux_node);
-
-  rclcpp::shutdown();
-
-  return EXIT_SUCCESS;
+  if (x < min) {
+    x = min;
+  } else if (max < x) {
+    x = max;
+  }
+  return x;
 }
+
+#endif  // TWIST_MUX__UTILS_HPP_

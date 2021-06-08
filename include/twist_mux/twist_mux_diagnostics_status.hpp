@@ -28,25 +28,50 @@
 
 /*
  * @author Enrique Fernandez
- * @author Siegfried Gevatter
  * @author Jeremie Deray
+ * @author Brighten Lee
  */
 
+#ifndef TWIST_MUX__TWIST_MUX_DIAGNOSTICS_STATUS_HPP_
+#define TWIST_MUX__TWIST_MUX_DIAGNOSTICS_STATUS_HPP_
+
 #include <twist_mux/twist_mux.hpp>
+#include <twist_mux/topic_handle.hpp>
+
+#include <rclcpp/rclcpp.hpp>
 
 #include <memory>
 
-int main(int argc, char * argv[])
+namespace twist_mux
 {
-  rclcpp::init(argc, argv);
+struct TwistMuxDiagnosticsStatus
+{
+  typedef std::shared_ptr<TwistMuxDiagnosticsStatus> Ptr;
+  typedef std::shared_ptr<const TwistMuxDiagnosticsStatus> ConstPtr;
 
-  auto twist_mux_node = std::make_shared<twist_mux::TwistMux>();
+  double reading_age;
+  rclcpp::Time last_loop_update;
+  double main_loop_time;
 
-  twist_mux_node->init();
+  LockTopicHandle::priority_type priority;
 
-  rclcpp::spin(twist_mux_node);
+  std::shared_ptr<TwistMux::velocity_topic_container> velocity_hs;
+  std::shared_ptr<TwistMux::lock_topic_container> lock_hs;
 
-  rclcpp::shutdown();
+  TwistMuxDiagnosticsStatus()
+  : reading_age(0),
+    last_loop_update(rclcpp::Clock().now()),
+    main_loop_time(0),
+    priority(0)
+  {
+    velocity_hs = std::make_shared<TwistMux::velocity_topic_container>();
+    lock_hs = std::make_shared<TwistMux::lock_topic_container>();
+  }
+};
 
-  return EXIT_SUCCESS;
-}
+typedef TwistMuxDiagnosticsStatus::Ptr TwistMuxDiagnosticsStatusPtr;
+typedef TwistMuxDiagnosticsStatus::ConstPtr TwistMuxDiagnosticsStatusConstPtr;
+
+}  // namespace twist_mux
+
+#endif  // TWIST_MUX__TWIST_MUX_DIAGNOSTICS_STATUS_HPP_

@@ -28,25 +28,52 @@
 
 /*
  * @author Enrique Fernandez
- * @author Siegfried Gevatter
  * @author Jeremie Deray
+ * @author Brighten Lee
  */
 
-#include <twist_mux/twist_mux.hpp>
+#ifndef TWIST_MUX__TWIST_MUX_DIAGNOSTICS_HPP_
+#define TWIST_MUX__TWIST_MUX_DIAGNOSTICS_HPP_
+
+#include <twist_mux/twist_mux_diagnostics_status.hpp>
+
+#include <diagnostic_updater/diagnostic_updater.hpp>
 
 #include <memory>
 
-int main(int argc, char * argv[])
+namespace twist_mux
 {
-  rclcpp::init(argc, argv);
+class TwistMuxDiagnostics
+{
+public:
+  typedef TwistMuxDiagnosticsStatus status_type;
 
-  auto twist_mux_node = std::make_shared<twist_mux::TwistMux>();
+  static constexpr double MAIN_LOOP_TIME_MIN = 0.2;   // [s]
+  static constexpr double READING_AGE_MIN = 3.0;     // [s]
 
-  twist_mux_node->init();
+  explicit TwistMuxDiagnostics(TwistMux * mux);
+  virtual ~TwistMuxDiagnostics() = default;
 
-  rclcpp::spin(twist_mux_node);
+  void diagnostics(diagnostic_updater::DiagnosticStatusWrapper & stat);
 
-  rclcpp::shutdown();
+  void update();
 
-  return EXIT_SUCCESS;
-}
+  void updateStatus(const status_type::ConstPtr & status);
+
+private:
+  /**
+   * @brief Levels
+   */
+  enum
+  {
+    OK = diagnostic_msgs::msg::DiagnosticStatus::OK,
+    WARN = diagnostic_msgs::msg::DiagnosticStatus::WARN,
+    ERROR = diagnostic_msgs::msg::DiagnosticStatus::ERROR
+  };
+
+  std::shared_ptr<diagnostic_updater::Updater> diagnostic_;
+  std::shared_ptr<status_type> status_;
+};
+}  // namespace twist_mux
+
+#endif  // TWIST_MUX__TWIST_MUX_DIAGNOSTICS_HPP_

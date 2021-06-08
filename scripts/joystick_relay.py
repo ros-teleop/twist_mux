@@ -43,14 +43,17 @@ class Velocity(object):
         self._max = max_velocity
         self._num_steps = num_steps
         if self._num_steps > 1:
-            self._step_incr = (max_velocity - min_velocity) / (self._num_steps - 1)
+            self._step_incr = (max_velocity - min_velocity) / \
+                (self._num_steps - 1)
         else:
             # If num_steps is one, we always use the minimum velocity.
             self._step_incr = 0
 
     def __call__(self, value, step=1):
         """
-        Takes a value in the range [0, 1] and the step and returns the
+        Compute the velocity.
+
+        Take a value in the range [0, 1] and the step and returns the
         velocity (usually m/s or rad/s).
         """
         assert step > 0 and step <= self._num_steps
@@ -81,16 +84,22 @@ class VelocityControl:
         self._node = node
         self._num_steps = self._node.declare_parameter('turbo/steps', 1)
 
-        forward_min = self._node.declare_parameter('turbo/linear_forward_min', 1.0)
-        forward_max = self._node.declare_parameter('turbo/linear_forward_max', 1.0)
+        forward_min = self._node.declare_parameter(
+            'turbo/linear_forward_min', 1.0)
+        forward_max = self._node.declare_parameter(
+            'turbo/linear_forward_max', 1.0)
         self._forward = Velocity(forward_min, forward_max, self._num_steps)
 
-        backward_min = self._node.declare_parameter('turbo/linear_backward_min', forward_min)
-        backward_max = self._node.declare_parameter('turbo/linear_backward_max', forward_max)
+        backward_min = self._node.declare_parameter(
+            'turbo/linear_backward_min', forward_min)
+        backward_max = self._node.declare_parameter(
+            'turbo/linear_backward_max', forward_max)
         self._backward = Velocity(backward_min, backward_max, self._num_steps)
 
-        lateral_min = self._node.declare_parameter('turbo/linear_lateral_min', 1.0)
-        lateral_max = self._node.declare_parameter('turbo/linear_lateral_max', 1.0)
+        lateral_min = self._node.declare_parameter(
+            'turbo/linear_lateral_min', 1.0)
+        lateral_max = self._node.declare_parameter(
+            'turbo/linear_lateral_max', 1.0)
         self._lateral = Velocity(lateral_min, lateral_max, self._num_steps)
 
         angular_min = self._node.declare_parameter('turbo/angular_min', 1.0)
@@ -98,7 +107,8 @@ class VelocityControl:
         self._angular = Velocity(angular_min, angular_max, self._num_steps)
 
         default_init_step = np.floor((self._num_steps + 1)/2.0)
-        init_step = self._node.declare_parameter('turbo/init_step', default_init_step)
+        init_step = self._node.declare_parameter(
+            'turbo/init_step', default_init_step)
 
         if init_step < 0 or init_step > self._num_steps:
             self._init_step = default_init_step
@@ -127,11 +137,14 @@ class VelocityControl:
         twist = Twist()
         if self.validate_twist(cmd):
             if cmd.linear.x >= 0:
-                twist.linear.x = self._forward(cmd.linear.x, self._current_step)
+                twist.linear.x = self._forward(
+                    cmd.linear.x, self._current_step)
             else:
-                twist.linear.x = self._backward(cmd.linear.x, self._current_step)
+                twist.linear.x = self._backward(
+                    cmd.linear.x, self._current_step)
             twist.linear.y = self._lateral(cmd.linear.y, self._current_step)
-            twist.angular.z = self._angular(cmd.angular.z, self._current_angular_step)
+            twist.angular.z = self._angular(
+                cmd.angular.z, self._current_angular_step)
         return twist
 
     def increase_turbo(self):
@@ -207,7 +220,8 @@ class JoystickRelay(Node):
         self._marker = TextMarker(self, 0.5, 2.0)
 
         self._pub_cmd = self.create_publisher(Twist, 'joy_vel_out', 1)
-        self._subscriber = self.create_subscription(Twist, 'joy_vel_in', self._forward_cmd, 1)
+        self._subscriber = self.create_subscription(
+            Twist, 'joy_vel_in', self._forward_cmd, 1)
 
         # TODO Latch
         self._pub_priority = self.create_publisher(Bool, 'joy_priority', 1)
