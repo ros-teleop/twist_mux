@@ -135,7 +135,7 @@ protected:
   priority_type priority_;
 
 protected:
-  std::unique_ptr<TwistMux> mux_;
+  TwistMux *mux_;
 
   rclcpp::Time stamp_;
   T msg_;
@@ -185,7 +185,7 @@ public:
       mux_->publishTwist(msg);
     }
   }
-}
+};
 
 class LockTopicHandle : public TopicHandle_<std_msgs::msg::Bool>
 {
@@ -222,7 +222,7 @@ public:
     stamp_ = mux_->now();
     msg_ = *msg;
   }
-}
+};
 
 }  // namespace twist_mux
 
