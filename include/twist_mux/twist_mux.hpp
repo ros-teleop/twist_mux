@@ -66,7 +66,7 @@ public:
   using velocity_topic_container = handle_container<VelocityTopicHandle>;
   using lock_topic_container = handle_container<LockTopicHandle>;
 
-  explicit TwistMux(int window_size = 10);
+  explicit TwistMux();
   ~TwistMux() = default;
 
   void init();
