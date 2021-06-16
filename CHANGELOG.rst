@@ -2,6 +2,11 @@
 Changelog for package twist_mux
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Foxy migration (`#25 <https://github.com/ros-teleop/twist_mux/issues/25>`_)
+* Contributors: Victor Lopez
+
 3.1.0 (2018-06-25)
 ------------------
 
