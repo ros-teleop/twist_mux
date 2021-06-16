@@ -27,26 +27,44 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 /*
- * @author Enrique Fernandez
- * @author Siegfried Gevatter
+ * @author Paul Mathieu
  * @author Jeremie Deray
  */
 
-#include <twist_mux/twist_mux.hpp>
+#ifndef TWIST_MUX__PARAMS_HELPERS_HPP_
+#define TWIST_MUX__PARAMS_HELPERS_HPP_
+
+#include <rclcpp/rclcpp.hpp>
 
 #include <memory>
+#include <sstream>
+#include <string>
 
-int main(int argc, char * argv[])
+namespace twist_mux
 {
-  rclcpp::init(argc, argv);
+class ParamsHelperException : public std::runtime_error
+{
+public:
+  explicit ParamsHelperException(const std::string & what)
+  : std::runtime_error(what)
+  {
+  }
+};
 
-  auto twist_mux_node = std::make_shared<twist_mux::TwistMux>();
+template<class T>
+void fetch_param(std::shared_ptr<rclcpp::Node> nh, const std::string & param_name, T & output)
+{
+  rclcpp::Parameter param;
+  if (!nh->get_parameter(param_name, param)) {
+    std::ostringstream err_msg;
+    err_msg << "could not load parameter '" << param_name << "'. (namespace: " <<
+      nh->get_namespace() << ")";
+    throw ParamsHelperException(err_msg.str());
+  }
 
-  twist_mux_node->init();
-
-  rclcpp::spin(twist_mux_node);
-
-  rclcpp::shutdown();
-
-  return EXIT_SUCCESS;
+  output = param.get_value<T>();
 }
+
+}  // namespace twist_mux
+
+#endif  // TWIST_MUX__PARAMS_HELPERS_HPP_

@@ -1,42 +1,54 @@
-/*********************************************************************
- * Software License Agreement (CC BY-NC-SA 4.0 License)
- *
- *  Copyright (c) 2014, PAL Robotics, S.L.
- *  All rights reserved.
- *
- *  This work is licensed under the Creative Commons
- *  Attribution-NonCommercial-ShareAlike 4.0 International License.
- *
- *  To view a copy of this license, visit
- *  http://creativecommons.org/licenses/by-nc-sa/4.0/
- *  or send a letter to
- *  Creative Commons, 444 Castro Street, Suite 900,
- *  Mountain View, California, 94041, USA.
- *********************************************************************/
+// Copyright 2020 PAL Robotics S.L.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+//    * Redistributions of source code must retain the above copyright
+//      notice, this list of conditions and the following disclaimer.
+//
+//    * Redistributions in binary form must reproduce the above copyright
+//      notice, this list of conditions and the following disclaimer in the
+//      documentation and/or other materials provided with the distribution.
+//
+//    * Neither the name of the PAL Robotics S.L. nor the names of its
+//      contributors may be used to endorse or promote products derived from
+//      this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
 
 /*
  * @author Enrique Fernandez
+ * @author Jeremie Deray
+ * @author Brighten Lee
  */
 
-#include <ros/ros.h>
-#include <geometry_msgs/Twist.h>
-#include <visualization_msgs/Marker.h>
-#include <visualization_msgs/MarkerArray.h>
+#include <rclcpp/rclcpp.hpp>
+#include <geometry_msgs/msg/twist.hpp>
+#include <visualization_msgs/msg/marker.hpp>
+#include <visualization_msgs/msg/marker_array.hpp>
 
+#include <memory>
 #include <string>
 
 class TwistMarker
 {
 public:
-
-  TwistMarker(double scale = 1.0, double z = 0.0, const std::string& frame_id = "base_footprint")
-    : frame_id_(frame_id)
-    , scale_(scale)
-    , z_(z)
+  TwistMarker(std::string & frame_id, double scale, double z)
+  : frame_id_(frame_id), scale_(scale), z_(z)
   {
     // ID and type:
     marker_.id = 0;
-    marker_.type = visualization_msgs::Marker::ARROW;
+    marker_.type = visualization_msgs::msg::Marker::ARROW;
 
     // Frame ID:
     marker_.header.frame_id = frame_id_;
@@ -56,74 +68,90 @@ public:
     marker_.color.r = 0.0;
     marker_.color.g = 1.0;
     marker_.color.b = 0.0;
+
+    // Error when all points are zero:
+    marker_.points[1].z = 0.01;
   }
 
-  void update(const geometry_msgs::Twist& twist)
+  void update(const geometry_msgs::msg::Twist & twist)
   {
+    using std::abs;
+
     marker_.points[1].x = twist.linear.x;
 
-    if (fabs(twist.linear.y) > fabs(twist.angular.z))
-    {
+    if (abs(twist.linear.y) > abs(twist.angular.z)) {
       marker_.points[1].y = twist.linear.y;
-    }
-    else
-    {
+    } else {
       marker_.points[1].y = twist.angular.z;
     }
   }
 
-  const visualization_msgs::Marker& getMarker()
+  const visualization_msgs::msg::Marker & getMarker()
   {
     return marker_;
   }
 
 private:
-  visualization_msgs::Marker marker_;
+  visualization_msgs::msg::Marker marker_;
 
   std::string frame_id_;
   double scale_;
   double z_;
 };
 
-class TwistMarkerPublisher
+class TwistMarkerPublisher : public rclcpp::Node
 {
 public:
-
-  TwistMarkerPublisher(double scale = 1.0, double z = 0.0)
-    : marker_(scale, z)
+  TwistMarkerPublisher()
+  : Node("twist_marker")
   {
-    ros::NodeHandle nh;
+    std::string frame_id;
+    double scale;
+    double z;
 
-    pub_ = nh.advertise<visualization_msgs::Marker>("marker", 1, true);
-    sub_ = nh.subscribe("twist", 1, &TwistMarkerPublisher::callback, this);
+    this->declare_parameter("frame_id");
+    this->declare_parameter("scale");
+    this->declare_parameter("vertical_position");
+
+    this->get_parameter_or<std::string>("frame_id", frame_id, "base_footprint");
+    this->get_parameter_or<double>("scale", scale, 1.0);
+    this->get_parameter_or<double>("vertical_position", z, 2.0);
+
+    marker_ = std::make_shared<TwistMarker>(frame_id, scale, z);
+
+    sub_ = this->create_subscription<geometry_msgs::msg::Twist>(
+      "twist", rclcpp::SystemDefaultsQoS(),
+      std::bind(&TwistMarkerPublisher::callback, this, std::placeholders::_1));
+
+    pub_ =
+      this->create_publisher<visualization_msgs::msg::Marker>(
+      "marker",
+      rclcpp::QoS(rclcpp::KeepLast(1)));
   }
 
-  void callback(const geometry_msgs::TwistConstPtr& twist)
+  void callback(const geometry_msgs::msg::Twist::ConstSharedPtr twist)
   {
-    marker_.update(*twist);
+    marker_->update(*twist);
 
-    pub_.publish(marker_.getMarker());
+    pub_->publish(marker_->getMarker());
   }
 
 private:
-  ros::Subscriber sub_;
-  ros::Publisher  pub_;
+  rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr sub_;
+  rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr pub_;
 
-  TwistMarker marker_;
+  std::shared_ptr<TwistMarker> marker_ = nullptr;
 };
 
-int
-main(int argc, char *argv[])
+int main(int argc, char * argv[])
 {
-  ros::init(argc, argv, "twist_marker");
+  rclcpp::init(argc, argv);
 
-  TwistMarkerPublisher t(1.0, 2.0);
+  auto twist_mux_node = std::make_shared<TwistMarkerPublisher>();
 
-  while (ros::ok())
-  {
-    ros::spin();
-  }
+  rclcpp::spin(twist_mux_node);
+
+  rclcpp::shutdown();
 
   return EXIT_SUCCESS;
 }
-
