@@ -109,9 +109,9 @@ public:
     double scale;
     double z;
 
-    this->declare_parameter("frame_id");
-    this->declare_parameter("scale");
-    this->declare_parameter("vertical_position");
+    this->declare_parameter("frame_id", rclcpp::ParameterType::PARAMETER_STRING);
+    this->declare_parameter("scale", rclcpp::ParameterType::PARAMETER_DOUBLE);
+    this->declare_parameter("vertical_position", rclcpp::ParameterType::PARAMETER_DOUBLE);
 
     this->get_parameter_or<std::string>("frame_id", frame_id, "base_footprint");
     this->get_parameter_or<double>("scale", scale, 1.0);
