@@ -2,8 +2,8 @@
 Changelog for package twist_mux
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.1.0 (2021-11-26)
+------------------
 * Cleanup parameter warnings & cpplint (`#32 <https://github.com/ros-teleop/twist_mux/issues/32>`_)
 * Update maintainer and license tag
 * Contributors: Stephen Street, Bence Magyar
