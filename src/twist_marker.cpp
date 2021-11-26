@@ -109,13 +109,13 @@ public:
     double scale;
     double z;
 
-    this->declare_parameter("frame_id");
-    this->declare_parameter("scale");
-    this->declare_parameter("vertical_position");
+    this->declare_parameter("frame_id", "base_footprint");
+    this->declare_parameter("scale", 1.0);
+    this->declare_parameter("vertical_position", 2.0);
 
-    this->get_parameter_or<std::string>("frame_id", frame_id, "base_footprint");
-    this->get_parameter_or<double>("scale", scale, 1.0);
-    this->get_parameter_or<double>("vertical_position", z, 2.0);
+    this->get_parameter<std::string>("frame_id", frame_id);
+    this->get_parameter<double>("scale", scale);
+    this->get_parameter<double>("vertical_position", z);
 
     marker_ = std::make_shared<TwistMarker>(frame_id, scale, z);
 
