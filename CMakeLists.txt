@@ -37,7 +37,7 @@ target_link_libraries(twist_marker ${catkin_LIBRARIES})
 install(TARGETS twist_mux twist_marker
     RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
-install(PROGRAMS scripts/joystick_relay.py
+catkin_install_python(PROGRAMS scripts/joystick_relay.py
     DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 foreach(dir launch config)
