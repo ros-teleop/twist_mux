@@ -2,8 +2,8 @@
 Changelog for package twist_mux
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.1.2 (2022-08-18)
+------------------
 * Install joystick_relay.py with catkin_install_python (`#37 <https://github.com/ros-teleop/twist_mux/issues/37>`_)
 * Some more logical operator fixes
 * Use standard logical or operator
