@@ -9,10 +9,6 @@ find_package(catkin REQUIRED
       visualization_msgs
       diagnostic_updater)
 
-find_package(Boost REQUIRED)
-
-set(CMAKE_CXX_FLAGS "-std=c++0x ${CMAKE_CXX_FLAGS}")
-
 catkin_package(
     INCLUDE_DIRS include
     CATKIN_DEPENDS
@@ -22,7 +18,7 @@ catkin_package(
       visualization_msgs
       diagnostic_updater)
 
-include_directories(include ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
+include_directories(include ${catkin_INCLUDE_DIRS})
 
 add_executable(twist_mux
     src/twist_mux.cpp
@@ -45,9 +41,8 @@ foreach(dir launch config)
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/${dir})
 endforeach()
 
-install(DIRECTORY include/
-   DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION}
-   FILES_MATCHING PATTERN "*.h"
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
 )
 
 if (CATKIN_ENABLE_TESTING)
