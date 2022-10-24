@@ -2,8 +2,8 @@
 Changelog for package twist_mux
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.1.3 (2022-10-24)
+------------------
 * Fix tests for Python3 (`#40 <https://github.com/ros-teleop/twist_mux/issues/40>`_)
 * [ROS1] Fix Noetic release / Python3 (`#39 <https://github.com/ros-teleop/twist_mux/issues/39>`_)
   Resolves `#22 <https://github.com/ros-teleop/twist_mux/issues/22>`_
