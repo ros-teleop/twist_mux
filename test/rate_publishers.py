@@ -23,7 +23,10 @@
 #   * Siegfried-A. Gevatter
 
 import sys
-import thread
+try:
+    import _thread as thread  # Python3
+except:
+    import thread             # Python2
 
 import rospy
 
@@ -58,10 +61,10 @@ class _RatePublisher(object):
         Gives _RatePublisher a chance to publish a stored message.
 
         This method returns the remaining time until the next scheduled
-        publication (or None).
+        publication (or -1).
         """
         if not self._period:
-            return None
+            return -1
         elapsed = (rospy.Time.now() - self._last_pub).to_sec()
         if elapsed >= (self._period - self._tolerance):
             self.publish_once()
@@ -122,8 +125,11 @@ class RatePublishers(object):
         # TODO: Create a class that spawns a global thread and provides
         #       createTimer and createWallTimer, just like NodeHandle
         #       does in rospy?
-        next_timeout = sys.maxint
-        for topic in self._publishers.itervalues():
+        try:
+            next_timeout = sys.maxsize  # Python3
+        except AttributeError:
+            next_timeout = sys.maxint   # Python2
+        for topic in self._publishers.values():
             next_timeout = min(topic.spin_once(), next_timeout)
         return next_timeout
 
@@ -144,7 +150,7 @@ class TimeoutManager(object):
                 for m in self._members:
                     m.spin_once()
                     rospy.sleep(0.01)  # FIXME
-            except Exception, e:
+            except Exception as e:
                 rospy.logfatal(e)
 
     def spin_thread(self):
