@@ -2,6 +2,14 @@
 Changelog for package twist_mux
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix tests for Python3 (`#40 <https://github.com/ros-teleop/twist_mux/issues/40>`_)
+* [ROS1] Fix Noetic release / Python3 (`#39 <https://github.com/ros-teleop/twist_mux/issues/39>`_)
+  Resolves `#22 <https://github.com/ros-teleop/twist_mux/issues/22>`_
+* [ROS1] Add GitHub Actions CI (`#38 <https://github.com/ros-teleop/twist_mux/issues/38>`_)
+* Contributors: Wolfgang Merkt
+
 3.1.2 (2022-08-18)
 ------------------
 * Install joystick_relay.py with catkin_install_python (`#37 <https://github.com/ros-teleop/twist_mux/issues/37>`_)
