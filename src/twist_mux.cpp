@@ -23,7 +23,6 @@
 #include <twist_mux/topic_handle.h>
 #include <twist_mux/twist_mux_diagnostics.h>
 #include <twist_mux/twist_mux_diagnostics_status.h>
-#include <twist_mux/utils.h>
 #include <twist_mux/xmlrpc_helpers.h>
 
 /**
@@ -53,6 +52,9 @@ TwistMux::TwistMux(int window_size)
   ros::NodeHandle nh;
   ros::NodeHandle nh_priv("~");
 
+  /// Get basic node configuration
+  nh_priv.param("pub_status_continuously", pub_status_continuously_, false);
+
   /// Get topics and locks:
   velocity_hs_ = boost::make_shared<velocity_topic_container>();
   lock_hs_     = boost::make_shared<lock_topic_container>();
@@ -61,6 +63,7 @@ TwistMux::TwistMux(int window_size)
 
   /// Publisher for output topic:
   cmd_pub_ = nh.advertise<geometry_msgs::Twist>("cmd_vel_out", 1);
+  status_pub_ = nh.advertise<std_msgs::String>("out_status", 5, true);
 
   /// Diagnostics:
   diagnostics_ = boost::make_shared<diagnostics_type>();
@@ -80,9 +83,15 @@ void TwistMux::updateDiagnostics(const ros::TimerEvent& event)
   diagnostics_->updateStatus(status_);
 }
 
-void TwistMux::publishTwist(const geometry_msgs::TwistConstPtr& msg)
+void TwistMux::publishTwist(const geometry_msgs::TwistConstPtr& msg, const std::string& name)
 {
   cmd_pub_.publish(*msg);
+  if(pub_status_continuously_ || name != last_pub_name_){
+      std_msgs::String status;
+      status.data = name;
+      status_pub_.publish(status);
+      last_pub_name_ = name;
+  }
 }
 
 template<typename T>
@@ -157,6 +166,15 @@ bool TwistMux::hasPriority(const VelocityTopicHandle& twist)
         priority = velocity_priority;
         velocity_name = velocity_h.getName();
       }
+    } 
+    else if(last_pub_name_ == velocity_h.getName() &&
+              (pub_status_continuously_ || last_locked_name_ != velocity_h.getName())) 
+    {
+        std_msgs::String status;
+        status.data = "locked";
+        last_pub_name_ = "locked";
+        status_pub_.publish(status);
+        last_locked_name_ = velocity_h.getName();
     }
   }
 

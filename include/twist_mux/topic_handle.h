@@ -169,7 +169,7 @@ public:
     // all the topic list; so far there's no O(1) solution.
     if (mux_->hasPriority(*this))
     {
-      mux_->publishTwist(msg);
+      mux_->publishTwist(msg, name_);
     }
   }
 };
