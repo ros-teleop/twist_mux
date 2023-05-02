@@ -107,9 +107,9 @@ void TwistMux::updateDiagnostics()
   diagnostics_->updateStatus(status_);
 }
 
-void TwistMux::publishTwist(const geometry_msgs::msg::Twist::ConstSharedPtr & msg)
+void TwistMux::publishTwist(const geometry_msgs::msg::Twist & msg)
 {
-  cmd_pub_->publish(*msg);
+  cmd_pub_->publish(msg);
 }
 
 template<typename T>
@@ -167,15 +167,13 @@ int TwistMux::getLockPriority()
 
 bool TwistMux::hasPriority(const VelocityTopicHandle & twist)
 {
-  const auto lock_priority = getLockPriority();
-
   LockTopicHandle::priority_type priority = 0;
   std::string velocity_name = "NULL";
 
   /// max_element on the priority of velocity topic handles satisfying
   /// that is NOT masked by the lock priority:
   for (const auto & velocity_h : *velocity_hs_) {
-    if (!velocity_h.isMasked(lock_priority)) {
+    if (!velocity_h.hasExpired()) {
       const auto velocity_priority = velocity_h.getPriority();
       if (priority < velocity_priority) {
         priority = velocity_priority;
