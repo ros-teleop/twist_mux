@@ -73,9 +73,11 @@ public:
 
   bool hasPriority(const VelocityTopicHandle & twist);
 
-  void publishTwist(const geometry_msgs::msg::Twist::ConstSharedPtr & msg);
+  void publishTwist(const geometry_msgs::msg::Twist & msg);
 
   void updateDiagnostics();
+
+  int getLockPriority();
 
 protected:
   typedef TwistMuxDiagnostics diagnostics_type;
@@ -100,8 +102,6 @@ protected:
 
   template<typename T>
   void getTopicHandles(const std::string & param_name, handle_container<T> & topic_hs);
-
-  int getLockPriority();
 
   std::shared_ptr<diagnostics_type> diagnostics_;
   std::shared_ptr<status_type> status_;
