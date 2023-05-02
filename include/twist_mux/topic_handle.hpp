@@ -189,12 +189,18 @@ public:
     stamp_ = mux_->now();
     msg_ = *msg;
 
+    // If topic locked, overide with zero twist
+    const auto lock_priority = mux_->getLockPriority();
+    if (getPriority() < lock_priority) {
+      msg_ = geometry_msgs::msg::Twist();
+    }
+
     // Check if this twist has priority.
     // Note that we have to check all the locks because they might time out
     // and since we have several topics we must look for the highest one in
     // all the topic list; so far there's no O(1) solution.
     if (mux_->hasPriority(*this)) {
-      mux_->publishTwist(msg);
+      mux_->publishTwist(msg_);
     }
   }
 };
