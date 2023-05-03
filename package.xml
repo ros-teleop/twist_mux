@@ -24,6 +24,8 @@
   <depend>visualization_msgs</depend>
   <depend>diagnostic_updater</depend>
 
+  <exec_depend>twist_mux_msgs</exec_depend>
+
   <test_depend>ament_lint_auto</test_depend>
 
   <test_depend>ament_cmake_xmllint</test_depend>

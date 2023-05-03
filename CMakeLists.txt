@@ -47,11 +47,10 @@ install(
   RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
-# Pending to test ROS2 migration
-#install(
-#  PROGRAMS scripts/joystick_relay.py
-#  DESTINATION lib/${PROJECT_NAME}
-#)
+install(
+  PROGRAMS scripts/joystick_relay.py
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 foreach(dir launch config)
   install(DIRECTORY ${dir}/
