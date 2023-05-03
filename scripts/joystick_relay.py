@@ -83,33 +83,33 @@ class VelocityControl:
 
     def __init__(self, node):
         self._node = node
-        self._num_steps = self._node.declare_parameter('turbo/steps', 1)
+        self._num_steps = self._node.declare_parameter('turbo.steps', 1)
 
         forward_min = self._node.declare_parameter(
-            'turbo/linear_forward_min', 1.0)
+            'turbo.linear_forward_min', 1.0)
         forward_max = self._node.declare_parameter(
-            'turbo/linear_forward_max', 1.0)
+            'turbo.linear_forward_max', 1.0)
         self._forward = Velocity(forward_min.value, forward_max.value, self._num_steps.value)
 
         backward_min = self._node.declare_parameter(
-            'turbo/linear_backward_min', forward_min.value)
+            'turbo.linear_backward_min', forward_min.value)
         backward_max = self._node.declare_parameter(
-            'turbo/linear_backward_max', forward_max.value)
+            'turbo.linear_backward_max', forward_max.value)
         self._backward = Velocity(backward_min.value, backward_max.value, self._num_steps.value)
 
         lateral_min = self._node.declare_parameter(
-            'turbo/linear_lateral_min', 1.0)
+            'turbo.linear_lateral_min', 1.0)
         lateral_max = self._node.declare_parameter(
-            'turbo/linear_lateral_max', 1.0)
+            'turbo.linear_lateral_max', 1.0)
         self._lateral = Velocity(lateral_min.value, lateral_max.value, self._num_steps.value)
 
-        angular_min = self._node.declare_parameter('turbo/angular_min', 1.0)
-        angular_max = self._node.declare_parameter('turbo/angular_max', 1.0)
+        angular_min = self._node.declare_parameter('turbo.angular_min', 1.0)
+        angular_max = self._node.declare_parameter('turbo.angular_max', 1.0)
         self._angular = Velocity(angular_min.value, angular_max.value, self._num_steps.value)
 
         default_init_step = np.floor((self._num_steps.value + 1)/2.0)
         init_step = self._node.declare_parameter(
-            'turbo/init_step', default_init_step)
+            'turbo.init_step', default_init_step)
 
         if init_step.value < 0 or init_step.value > self._num_steps.value:
             self._init_step = default_init_step
