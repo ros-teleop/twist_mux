@@ -55,8 +55,7 @@ def generate_launch_description():
             remappings={('/cmd_vel_out', LaunchConfiguration('cmd_vel_out'))},
             parameters=[
                 LaunchConfiguration('config_locks'),
-                LaunchConfiguration('config_topics'),
-                LaunchConfiguration('config_joy')]
+                LaunchConfiguration('config_topics')]
         ),
         Node(
             package='twist_mux',
