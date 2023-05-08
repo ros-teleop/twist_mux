@@ -114,9 +114,9 @@ class VelocityControl:
 
         if init_step.value < 0 or init_step.value > self._num_steps.value:
             self._init_step = default_init_step
-            self._node.get_logger().warn('Initial step %d outside range [1, %d]!'
-                                         ' Falling back to default %d' %
-                                         (init_step.value, self._num_steps.value, default_init_step))
+            self._node.get_logger().warn(
+                'Initial step %d outside range [1, %d]! Falling back to default %d' %
+                (init_step.value, self._num_steps.value, default_init_step))
         else:
             self._init_step = init_step.value
 
