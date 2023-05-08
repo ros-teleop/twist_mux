@@ -29,6 +29,7 @@ import numpy as np
 
 from geometry_msgs.msg import Twist
 from rclpy.action import ActionServer
+from rclpy.executors import ExternalShutdownException
 from rclpy.qos import QoSProfile, QoSDurabilityPolicy
 from rclpy.node import Node
 from std_msgs.msg import Bool
@@ -288,10 +289,13 @@ def main(args=None):
 
     node = JoystickRelay()
 
-    rclpy.spin(node)
-
-    node.destroy_node()
-    rclpy.shutdown()
+    try:
+        rclpy.spin(node)
+    except (KeyboardInterrupt, ExternalShutdownException):
+        pass
+    finally:
+        node.destroy_node()
+        rclpy.try_shutdown()
 
 
 if __name__ == '__main__':
