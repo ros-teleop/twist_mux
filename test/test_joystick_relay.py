@@ -131,6 +131,12 @@ class TestJoystickRelay(unittest.TestCase):
         self.twist_msg = Twist()
         self.current_twist = Twist()
 
+    @classmethod
+    def _set_twist(self, linear_x, linear_y, angular_z):
+        self.twist_msg.linear.x = linear_x
+        self.twist_msg.linear.y = linear_y
+        self.twist_msg.angular.z = angular_z
+
     def test_joy_priority_action(self):
         priority = None
 
@@ -160,9 +166,7 @@ class TestJoystickRelay(unittest.TestCase):
 
     def test_joy_vel(self):
         self._start_spinner_thread()
-        self.twist_msg.linear.x = 0.5
-        self.twist_msg.linear.y = 0.8
-        self.twist_msg.angular.z = 1.0
+        self._set_twist(0.5, 0.8, 1.0)
 
         self._wait_for_twist()
 
@@ -184,10 +188,7 @@ class TestJoystickRelay(unittest.TestCase):
         increase_client.wait_for_server()
         increase_client.send_goal(JoyTurbo.Goal())
 
-        self.twist_msg.linear.x = 0.5
-        self.twist_msg.linear.y = 0.8
-        self.twist_msg.angular.z = 1.0
-
+        self._set_twist(0.5, 0.8, 1.0)
         self._wait_for_twist()
 
         self.assertEqual(
@@ -207,10 +208,7 @@ class TestJoystickRelay(unittest.TestCase):
         decrease_client.wait_for_server()
         decrease_client.send_goal(JoyTurbo.Goal())
 
-        self.twist_msg.linear.x = 0.5
-        self.twist_msg.linear.y = 0.8
-        self.twist_msg.angular.z = 1.0
-
+        self._set_twist(0.5, 0.8, 1.0)
         self._wait_for_twist()
 
         self.assertEqual(
@@ -231,10 +229,7 @@ class TestJoystickRelay(unittest.TestCase):
         client.wait_for_server()
         client.send_goal(JoyTurbo.Goal())
 
-        self.twist_msg.linear.x = 0.5
-        self.twist_msg.linear.y = 0.8
-        self.twist_msg.angular.z = 1.0
-
+        self._set_twist(0.5, 0.8, 1.0)
         self._wait_for_twist()
 
         self.assertEqual(
@@ -254,10 +249,7 @@ class TestJoystickRelay(unittest.TestCase):
         client.wait_for_server()
         client.send_goal(JoyTurbo.Goal())
 
-        self.twist_msg.linear.x = 0.5
-        self.twist_msg.linear.y = 0.8
-        self.twist_msg.angular.z = 1.0
-
+        self._set_twist(0.5, 0.8, 1.0)
         self._wait_for_twist()
 
         self.assertEqual(
@@ -278,10 +270,7 @@ class TestJoystickRelay(unittest.TestCase):
         decrease_client.wait_for_server()
         decrease_client.send_goal(JoyTurbo.Goal())
 
-        self.twist_msg.linear.x = 0.5
-        self.twist_msg.linear.y = 0.8
-        self.twist_msg.angular.z = 1.0
-
+        self._set_twist(0.5, 0.8, 1.0)
         self._wait_for_twist()
 
         self.assertEqual(
@@ -301,10 +290,7 @@ class TestJoystickRelay(unittest.TestCase):
         reset_client.wait_for_server()
         reset_client.send_goal(JoyTurbo.Goal())
 
-        self.twist_msg.linear.x = 0.5
-        self.twist_msg.linear.y = 0.8
-        self.twist_msg.angular.z = 1.0
-
+        self._set_twist(0.5, 0.8, 1.0)
         self._wait_for_twist()
 
         self.assertEqual(
