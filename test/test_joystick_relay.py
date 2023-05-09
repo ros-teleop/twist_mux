@@ -34,6 +34,7 @@ MAX_VEL = 1.0
 MIN_VEL = 0.5
 STEPS = 4
 INIT_STEP = 1.0
+PRIORITY = True
 
 
 def generate_test_description():
@@ -43,7 +44,7 @@ def generate_test_description():
       executable='joystick_relay.py',
       output='screen',
       parameters=[{
-          'priority': True,
+          'priority': PRIORITY,
           'turbo.linear_forward_min': MIN_VEL,
           'turbo.linear_forward_max': MAX_VEL,
           'turbo.linear_lateral_min': MIN_VEL,
@@ -79,20 +80,19 @@ class TestJoystickRelay(unittest.TestCase):
     def setUp(self):
         self.sub = self.node.create_subscription(
             Twist, 'joy_vel_out', self._sub_callback, QoSProfile(depth=1))
-        self._reset_twist()
         self.timer = self.node.create_timer(0.1, self._pub_callback)
-        self.executor = None
-        self.exec_thread = None
+        self.executor = SingleThreadedExecutor()
+        self.executor.add_node(self.node)
+        self.exec_thread = threading.Thread(target=self.executor.spin)
+        self.exec_thread.start()
+        self._reset_and_wait_twist()
 
     @classmethod
     def tearDown(self):
         self.timer.destroy()
-        if (self.executor is not None) and (self.exec_thread is not None):
-            self.executor.remove_node(self.node)
-            self.executor.shutdown()
-            self.exec_thread.join()
-
-        self.sub = None
+        self.executor.remove_node(self.node)
+        self.executor.shutdown()
+        self.exec_thread.join()
 
     @classmethod
     def _pub_callback(self):
@@ -101,13 +101,6 @@ class TestJoystickRelay(unittest.TestCase):
     @classmethod
     def _sub_callback(self, msg):
         self.current_twist = msg
-
-    @classmethod
-    def _start_spinner_thread(self):
-        self.executor = SingleThreadedExecutor()
-        self.executor.add_node(self.node)
-        self.exec_thread = threading.Thread(target=self.executor.spin)
-        self.exec_thread.start()
 
     @classmethod
     def _get_current_vel(self, commanded_vel, current_step):
@@ -119,23 +112,27 @@ class TestJoystickRelay(unittest.TestCase):
         return vel * commanded_vel
 
     @classmethod
-    def _wait_for_twist(self):
-        # wait until all changes
+    def _reset_and_wait_twist(self):
+        self.twist_msg = Twist()
+        self.current_twist = Twist()
+
+        # wait until all is reset
+        while (self.current_twist.linear.x != 0.0 or
+               self.current_twist.linear.y != 0.0 or
+               self.current_twist.angular.z != 0.0):
+            pass
+
+    @classmethod
+    def _set_and_wait_twist(self, linear_x, linear_y, angular_z):
+        self.twist_msg.linear.x = linear_x
+        self.twist_msg.linear.y = linear_y
+        self.twist_msg.angular.z = angular_z
+
+        # wait until all is set
         while (self.current_twist.linear.x == 0.0 or
                self.current_twist.linear.y == 0.0 or
                self.current_twist.angular.z == 0.0):
             pass
-
-    @classmethod
-    def _reset_twist(self):
-        self.twist_msg = Twist()
-        self.current_twist = Twist()
-
-    @classmethod
-    def _set_twist(self, linear_x, linear_y, angular_z):
-        self.twist_msg.linear.x = linear_x
-        self.twist_msg.linear.y = linear_y
-        self.twist_msg.angular.z = angular_z
 
     def test_joy_priority_action(self):
         priority = None
@@ -144,31 +141,28 @@ class TestJoystickRelay(unittest.TestCase):
             nonlocal priority
             priority = msg
 
-        def wait_for_priority(value):
+        def wait_and_check_priority(value):
             nonlocal priority
             while (priority is None):
-                rclpy.spin_once(self.node)
+                pass
             self.assertEqual(priority.data, value)
             priority = None
 
         self.node.create_subscription(Bool, 'joy_priority', _priority_cb, QoSProfile(
             durability=QoSDurabilityPolicy.TRANSIENT_LOCAL, depth=1))
-        wait_for_priority(True)  # default one
+        wait_and_check_priority(PRIORITY)  # default one
 
         client = ActionClient(self.node, JoyPriority, 'joy_priority_action')
         client.wait_for_server()
 
         client.send_goal_async(JoyPriority.Goal())
-        wait_for_priority(False)
+        wait_and_check_priority(not PRIORITY)
 
         client.send_goal_async(JoyPriority.Goal())
-        wait_for_priority(True)
+        wait_and_check_priority(PRIORITY)
 
     def test_joy_vel(self):
-        self._start_spinner_thread()
-        self._set_twist(0.5, 0.8, 1.0)
-
-        self._wait_for_twist()
+        self._set_and_wait_twist(0.5, 0.8, 1.0)
 
         self.assertEqual(
             self.current_twist.linear.x,
@@ -180,16 +174,13 @@ class TestJoystickRelay(unittest.TestCase):
             self.current_twist.angular.z,
             self._get_current_vel(self.twist_msg.angular.z, INIT_STEP))
 
-    def test_turbo_increase_decrease(self):
-        self._start_spinner_thread()
-
+    def test_turbo_increase(self):
         # Increase
         increase_client = ActionClient(self.node, JoyTurbo, 'joy_turbo_increase')
         increase_client.wait_for_server()
         increase_client.send_goal(JoyTurbo.Goal())
 
-        self._set_twist(0.5, 0.8, 1.0)
-        self._wait_for_twist()
+        self._set_and_wait_twist(0.5, 0.8, 1.0)
 
         self.assertEqual(
             self.current_twist.linear.x,
@@ -201,77 +192,13 @@ class TestJoystickRelay(unittest.TestCase):
             self.current_twist.angular.z,
             self._get_current_vel(self.twist_msg.angular.z, INIT_STEP + 1))
 
-        self._reset_twist()
-
+    def test_turbo_decrease(self):
         # Decrease
         decrease_client = ActionClient(self.node, JoyTurbo, 'joy_turbo_decrease')
         decrease_client.wait_for_server()
         decrease_client.send_goal(JoyTurbo.Goal())
 
-        self._set_twist(0.5, 0.8, 1.0)
-        self._wait_for_twist()
-
-        self.assertEqual(
-            self.current_twist.linear.x,
-            self._get_current_vel(self.twist_msg.linear.x, INIT_STEP))  # + 1 - 1
-        self.assertEqual(
-            self.current_twist.linear.y,
-            self._get_current_vel(self.twist_msg.linear.y, INIT_STEP))  # + 1 - 1
-        self.assertEqual(
-            self.current_twist.angular.z,
-            self._get_current_vel(self.twist_msg.angular.z, INIT_STEP))  # + 1 - 1
-
-    def test_turbo_angular_increase_decrease(self):
-        self._start_spinner_thread()
-
-        # Angular increase
-        client = ActionClient(self.node, JoyTurbo, 'joy_turbo_angular_increase')
-        client.wait_for_server()
-        client.send_goal(JoyTurbo.Goal())
-
-        self._set_twist(0.5, 0.8, 1.0)
-        self._wait_for_twist()
-
-        self.assertEqual(
-            self.current_twist.linear.x,
-            self._get_current_vel(self.twist_msg.linear.x, INIT_STEP))
-        self.assertEqual(
-            self.current_twist.linear.y,
-            self._get_current_vel(self.twist_msg.linear.y, INIT_STEP))
-        self.assertEqual(
-            self.current_twist.angular.z,
-            self._get_current_vel(self.twist_msg.angular.z, INIT_STEP + 1))
-
-        self._reset_twist()
-
-        # Angular decrease
-        client = ActionClient(self.node, JoyTurbo, 'joy_turbo_angular_decrease')
-        client.wait_for_server()
-        client.send_goal(JoyTurbo.Goal())
-
-        self._set_twist(0.5, 0.8, 1.0)
-        self._wait_for_twist()
-
-        self.assertEqual(
-            self.current_twist.linear.x,
-            self._get_current_vel(self.twist_msg.linear.x, INIT_STEP))
-        self.assertEqual(
-            self.current_twist.linear.y,
-            self._get_current_vel(self.twist_msg.linear.y, INIT_STEP))
-        self.assertEqual(
-            self.current_twist.angular.z,
-            self._get_current_vel(self.twist_msg.angular.z, INIT_STEP))  # + 1 - 1
-
-    def test_joy_turbo_reset(self):
-        self._start_spinner_thread()
-
-        # Decrease first to see the effect of the reset
-        decrease_client = ActionClient(self.node, JoyTurbo, 'joy_turbo_decrease')
-        decrease_client.wait_for_server()
-        decrease_client.send_goal(JoyTurbo.Goal())
-
-        self._set_twist(0.5, 0.8, 1.0)
-        self._wait_for_twist()
+        self._set_and_wait_twist(0.5, 0.8, 1.0)
 
         self.assertEqual(
             self.current_twist.linear.x,
@@ -283,15 +210,69 @@ class TestJoystickRelay(unittest.TestCase):
             self.current_twist.angular.z,
             self._get_current_vel(self.twist_msg.angular.z, INIT_STEP - 1))
 
-        self._reset_twist()
+    def test_turbo_angular_increase(self):
+
+        # Angular increase
+        client = ActionClient(self.node, JoyTurbo, 'joy_turbo_angular_increase')
+        client.wait_for_server()
+        client.send_goal(JoyTurbo.Goal())
+
+        self._set_and_wait_twist(0.5, 0.8, 1.0)
+
+        self.assertEqual(
+            self.current_twist.linear.x,
+            self._get_current_vel(self.twist_msg.linear.x, INIT_STEP))
+        self.assertEqual(
+            self.current_twist.linear.y,
+            self._get_current_vel(self.twist_msg.linear.y, INIT_STEP))
+        self.assertEqual(
+            self.current_twist.angular.z,
+            self._get_current_vel(self.twist_msg.angular.z, INIT_STEP + 1))
+
+    def test_turbo_angular_decrease(self):
+        # Angular decrease
+        client = ActionClient(self.node, JoyTurbo, 'joy_turbo_angular_decrease')
+        client.wait_for_server()
+        client.send_goal(JoyTurbo.Goal())
+
+        self._set_and_wait_twist(0.5, 0.8, 1.0)
+
+        self.assertEqual(
+            self.current_twist.linear.x,
+            self._get_current_vel(self.twist_msg.linear.x, INIT_STEP))
+        self.assertEqual(
+            self.current_twist.linear.y,
+            self._get_current_vel(self.twist_msg.linear.y, INIT_STEP))
+        self.assertEqual(
+            self.current_twist.angular.z,
+            self._get_current_vel(self.twist_msg.angular.z, INIT_STEP - 1))
+
+    def test_joy_turbo_reset(self):
+        # Decrease first to see the effect of the reset
+        decrease_client = ActionClient(self.node, JoyTurbo, 'joy_turbo_decrease')
+        decrease_client.wait_for_server()
+        decrease_client.send_goal(JoyTurbo.Goal())
+
+        self._set_and_wait_twist(0.5, 0.8, 1.0)
+
+        self.assertEqual(
+            self.current_twist.linear.x,
+            self._get_current_vel(self.twist_msg.linear.x, INIT_STEP - 1))
+        self.assertEqual(
+            self.current_twist.linear.y,
+            self._get_current_vel(self.twist_msg.linear.y, INIT_STEP - 1))
+        self.assertEqual(
+            self.current_twist.angular.z,
+            self._get_current_vel(self.twist_msg.angular.z, INIT_STEP - 1))
+
+        self._reset_and_wait_twist()
 
         # Reset
         reset_client = ActionClient(self.node, JoyTurbo, 'joy_turbo_reset')
         reset_client.wait_for_server()
         reset_client.send_goal(JoyTurbo.Goal())
 
-        self._set_twist(0.5, 0.8, 1.0)
-        self._wait_for_twist()
+        self._set_and_wait_twist(0.5, 0.8, 1.0)
 
         self.assertEqual(
             self.current_twist.linear.x,
