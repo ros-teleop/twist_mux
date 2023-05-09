@@ -265,7 +265,7 @@ class TestJoystickRelay(unittest.TestCase):
     def test_joy_turbo_reset(self):
         self._start_spinner_thread()
 
-        # Decrease
+        # Decrease first to see the effect of the reset
         decrease_client = ActionClient(self.node, JoyTurbo, 'joy_turbo_decrease')
         decrease_client.wait_for_server()
         decrease_client.send_goal(JoyTurbo.Goal())
