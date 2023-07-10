@@ -22,5 +22,5 @@ jobs:
     with:
       ros_distro: humble
       ros_repo: main
-      upstream_workspace: realtime_tools-not-released.rolling.repos
-      ref_for_scheduled_build: rolling
+      upstream_workspace: twist_mux_deps.repos
+      ref_for_scheduled_build: add-ci

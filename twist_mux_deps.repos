@@ -1,0 +1,5 @@
+repositories:
+  twist_mux_msgs:
+    type: git
+    url: git@github.com:ros-teleop/twist_mux_msgs.git
+    version: master
