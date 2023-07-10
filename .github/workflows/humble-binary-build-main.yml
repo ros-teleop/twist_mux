@@ -5,13 +5,13 @@ name: Humble Binary Build - main
 on:
   workflow_dispatch:
     branches:
-      - rolling
+      - add-ci
   pull_request:
     branches:
-      - rolling
+      - add-ci
   push:
     branches:
-      - rolling
+      - add-ci
   schedule:
     # Run every morning to detect flakiness and broken dependencies
     - cron: '03 1 * * *'
