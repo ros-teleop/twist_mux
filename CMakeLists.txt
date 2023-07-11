@@ -65,6 +65,7 @@ install(
 if(BUILD_TESTING)
   find_package(launch_testing_ament_cmake)
   add_launch_test(test/test_joystick_relay.py)
+  add_launch_test(test/system.test.py)
 endif()
 
 ament_export_include_directories(include)
