@@ -12,7 +12,7 @@
   <author email="efernandez@clearpathrobotics.com">Enrique Fernandez</author>
   <author email="siegfried.gevatter@pal-robotics.com">Siegfried-A. Gevatter Pujals</author>
 
-  <license>CC BY-NC-SA 4.0</license>
+  <license>Apache-2.0</license>
 
   <buildtool_depend>catkin</buildtool_depend>
 
