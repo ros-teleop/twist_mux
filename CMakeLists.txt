@@ -47,11 +47,10 @@ install(
   RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
-# Pending to test ROS2 migration
-#install(
-#  PROGRAMS scripts/joystick_relay.py
-#  DESTINATION lib/${PROJECT_NAME}
-#)
+install(
+  PROGRAMS scripts/joystick_relay.py
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 foreach(dir launch config)
   install(DIRECTORY ${dir}/
@@ -64,11 +63,8 @@ install(
 )
 
 if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  ament_lint_auto_find_test_dependencies()
-
-  #  find_package(launch_testing_ament_cmake)
-  #  add_launch_test(test/system.test.py)
+  find_package(launch_testing_ament_cmake)
+  add_launch_test(test/test_joystick_relay.py)
 endif()
 
 ament_export_include_directories(include)
