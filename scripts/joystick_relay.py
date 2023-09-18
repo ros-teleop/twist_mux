@@ -29,6 +29,8 @@ import numpy as np
 
 from geometry_msgs.msg import Twist
 from rclpy.action import ActionServer
+from rclpy.executors import ExternalShutdownException
+from rclpy.qos import QoSProfile, QoSDurabilityPolicy
 from rclpy.node import Node
 from std_msgs.msg import Bool
 from twist_mux_msgs.action import JoyPriority, JoyTurbo
@@ -75,48 +77,48 @@ class ServiceLikeActionServer(object):
     def _cb(self, goal):
         self._callback()
         goal.succeed()
-        return self._action_type().Result()
+        return self._action_type.Result()
 
 
 class VelocityControl:
 
     def __init__(self, node):
         self._node = node
-        self._num_steps = self._node.declare_parameter('turbo/steps', 1)
+        self._num_steps = self._node.declare_parameter('turbo.steps', 1)
 
         forward_min = self._node.declare_parameter(
-            'turbo/linear_forward_min', 1.0)
+            'turbo.linear_forward_min', 1.0)
         forward_max = self._node.declare_parameter(
-            'turbo/linear_forward_max', 1.0)
-        self._forward = Velocity(forward_min, forward_max, self._num_steps)
+            'turbo.linear_forward_max', 1.0)
+        self._forward = Velocity(forward_min.value, forward_max.value, self._num_steps.value)
 
         backward_min = self._node.declare_parameter(
-            'turbo/linear_backward_min', forward_min)
+            'turbo.linear_backward_min', forward_min.value)
         backward_max = self._node.declare_parameter(
-            'turbo/linear_backward_max', forward_max)
-        self._backward = Velocity(backward_min, backward_max, self._num_steps)
+            'turbo.linear_backward_max', forward_max.value)
+        self._backward = Velocity(backward_min.value, backward_max.value, self._num_steps.value)
 
         lateral_min = self._node.declare_parameter(
-            'turbo/linear_lateral_min', 1.0)
+            'turbo.linear_lateral_min', 1.0)
         lateral_max = self._node.declare_parameter(
-            'turbo/linear_lateral_max', 1.0)
-        self._lateral = Velocity(lateral_min, lateral_max, self._num_steps)
+            'turbo.linear_lateral_max', 1.0)
+        self._lateral = Velocity(lateral_min.value, lateral_max.value, self._num_steps.value)
 
-        angular_min = self._node.declare_parameter('turbo/angular_min', 1.0)
-        angular_max = self._node.declare_parameter('turbo/angular_max', 1.0)
-        self._angular = Velocity(angular_min, angular_max, self._num_steps)
+        angular_min = self._node.declare_parameter('turbo.angular_min', 1.0)
+        angular_max = self._node.declare_parameter('turbo.angular_max', 1.0)
+        self._angular = Velocity(angular_min.value, angular_max.value, self._num_steps.value)
 
-        default_init_step = np.floor((self._num_steps + 1)/2.0)
+        default_init_step = np.floor((self._num_steps.value + 1)/2.0)
         init_step = self._node.declare_parameter(
-            'turbo/init_step', default_init_step)
+            'turbo.init_step', default_init_step)
 
-        if init_step < 0 or init_step > self._num_steps:
+        if init_step.value < 0 or init_step.value > self._num_steps.value:
             self._init_step = default_init_step
-            self._node.get_logger().warn('Initial step %d outside range [1, %d]!'
-                                         ' Falling back to default %d' %
-                                         (init_step, self._num_steps, default_init_step))
+            self._node.get_logger().warn(
+                'Initial step %d outside range [1, %d]! Falling back to default %d' %
+                (init_step.value, self._num_steps.value, default_init_step))
         else:
-            self._init_step = init_step
+            self._init_step = init_step.value
 
         self.reset_turbo()
 
@@ -148,7 +150,7 @@ class VelocityControl:
         return twist
 
     def increase_turbo(self):
-        if self._current_step < self._num_steps:
+        if self._current_step < self._num_steps.value:
             self._current_step += 1
         self.increase_angular_turbo()
 
@@ -158,7 +160,7 @@ class VelocityControl:
         self.decrease_angular_turbo()
 
     def increase_angular_turbo(self):
-        if self._current_angular_step < self._num_steps:
+        if self._current_angular_step < self._num_steps.value:
             self._current_angular_step += 1
 
     def decrease_angular_turbo(self):
@@ -173,8 +175,11 @@ class VelocityControl:
 class TextMarker(object):
 
     def __init__(self, node, scale=1.0, z=0.0):
-        # TODO latch
-        self._pub = node.create_publisher(Marker, 'text_marker', 1)
+        self._pub = node.create_publisher(
+            Marker, 'text_marker', QoSProfile(
+                durability=QoSDurabilityPolicy.TRANSIENT_LOCAL,
+                depth=1)
+        )
 
         self._scale = scale
         self._z = z
@@ -214,8 +219,9 @@ class JoystickRelay(Node):
     def __init__(self):
         super().__init__('joystick_relay')
 
-        self._current_priority = self.declare_parameter('priority', True)
-        self._velocity_control = VelocityControl()
+        self._current_priority = Bool()
+        self._current_priority.data = self.declare_parameter('priority', True).value
+        self._velocity_control = VelocityControl(self)
 
         self._marker = TextMarker(self, 0.5, 2.0)
 
@@ -223,12 +229,15 @@ class JoystickRelay(Node):
         self._subscriber = self.create_subscription(
             Twist, 'joy_vel_in', self._forward_cmd, 1)
 
-        # TODO Latch
-        self._pub_priority = self.create_publisher(Bool, 'joy_priority', 1)
+        self._pub_priority = self.create_publisher(
+            Bool, 'joy_priority', QoSProfile(
+                durability=QoSDurabilityPolicy.TRANSIENT_LOCAL,
+                depth=1)
+        )
 
         # Wait for subscribers and publish initial joy_priority:
         self._pub_priority.publish(self._current_priority)
-        self._marker.update(self._current_priority)
+        self._marker.update(self._current_priority.data)
 
         # Marker timer (required to update the marker when the robot doesn't receive velocities):
         self._timer = self.create_timer(1.0, self._timer_callback)
@@ -255,24 +264,24 @@ class JoystickRelay(Node):
             self._velocity_control.reset_turbo)
 
     def _forward_cmd(self, cmd):
-        if self._current_priority:
+        if self._current_priority.data:
             self._pub_cmd.publish(self._velocity_control.scale_twist(cmd))
 
-        self._marker.update(self._current_priority)
+        self._marker.update(self._current_priority.data)
 
     def _toggle_priority(self):
-        self._current_priority = not self._current_priority
-        self.get_logger().info("Toggled joy_priority, current status is: %s",
-                               self._current_priority)
+        self._current_priority.data = not self._current_priority.data
+        self.get_logger().info("Toggled joy_priority, current status is: %s" %
+                               (self._current_priority.data))
         self._pub_priority.publish(self._current_priority)
-        self._marker.update(self._current_priority)
+        self._marker.update(self._current_priority.data)
 
         # Reset velocity to 0:
-        if self._current_priority:
+        if self._current_priority.data:
             self._pub_cmd.publish(Twist())
 
-    def _timer_callback(self, event):
-        self._marker.update(self._current_priority)
+    def _timer_callback(self):
+        self._marker.update(self._current_priority.data)
 
 
 def main(args=None):
@@ -280,10 +289,13 @@ def main(args=None):
 
     node = JoystickRelay()
 
-    rclpy.spin(node)
-
-    node.destroy_node()
-    rclpy.shutdown()
+    try:
+        rclpy.spin(node)
+    except (KeyboardInterrupt, ExternalShutdownException):
+        pass
+    finally:
+        node.destroy_node()
+        rclpy.try_shutdown()
 
 
 if __name__ == '__main__':
