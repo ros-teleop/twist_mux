@@ -50,7 +50,7 @@ def generate_launch_description():
             description='cmd vel output topic'),
         DeclareLaunchArgument(
             'use_sim_time',
-            default_value='True',
+            default_value='False',
             description='Use simulation time'),
         Node(
             package='twist_mux',
