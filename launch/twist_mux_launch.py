@@ -48,12 +48,17 @@ def generate_launch_description():
             'cmd_vel_out',
             default_value='twist_mux/cmd_vel',
             description='cmd vel output topic'),
+        DeclareLaunchArgument(
+            'use_sim_time',
+            default_value='False',
+            description='Use simulation time'),
         Node(
             package='twist_mux',
             executable='twist_mux',
             output='screen',
             remappings={('/cmd_vel_out', LaunchConfiguration('cmd_vel_out'))},
             parameters=[
+                {'use_sim_time': LaunchConfiguration('use_sim_time')},
                 LaunchConfiguration('config_locks'),
                 LaunchConfiguration('config_topics')]
         ),
@@ -63,6 +68,7 @@ def generate_launch_description():
             output='screen',
             remappings={('/twist', LaunchConfiguration('cmd_vel_out'))},
             parameters=[{
+                'use_sim_time': LaunchConfiguration('use_sim_time'),
                 'frame_id': 'base_link',
                 'scale': 1.0,
                 'vertical_position': 2.0}]),
