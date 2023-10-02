@@ -4,6 +4,7 @@
 # - topic   : input topic of geometry_msgs::Twist type
 # - timeout : timeout in seconds to start discarding old messages, and use 0.0 speed instead
 # - priority: priority in the range [0, 255]; the higher the more priority over other topics
+# - pub_zero_if_locked: if true, publish 0.0 command if the topic is locked
 
 twist_mux:
   ros__parameters:
@@ -12,15 +13,19 @@ twist_mux:
         topic   : nav_vel
         timeout : 0.5
         priority: 10
+        pub_zero_if_locked: false
       joystick:
         topic   : joy_vel
         timeout : 0.5
         priority: 100
+        pub_zero_if_locked: false
       keyboard:
         topic   : key_vel
         timeout : 0.5
         priority: 90
+        pub_zero_if_locked: false
       tablet:
         topic   : tab_vel
         timeout : 0.5
         priority: 100
+        pub_zero_if_locked: false
