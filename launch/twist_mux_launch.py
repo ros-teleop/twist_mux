@@ -78,5 +78,7 @@ def generate_launch_description():
             output='screen',
             remappings={('joy_vel_in', 'input_joy/cmd_vel'),
                         ('joy_vel_out', 'joy_vel')},
-            parameters=[LaunchConfiguration('config_joy')])
+            parameters=[
+                {'use_sim_time': LaunchConfiguration('use_sim_time')},
+                LaunchConfiguration('config_joy')])
     ])
