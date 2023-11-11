@@ -2,6 +2,12 @@
 Changelog for package twist_mux
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add use_sim_time param for joystick_relay (`#48 <https://github.com/ros-teleop/twist_mux/issues/48>`_)
+* Add use_sim_time param to launchfile (`#41 <https://github.com/ros-teleop/twist_mux/issues/41>`_)
+* Contributors: Noel Jiménez García, Steven Palma
+
 4.2.0 (2023-09-18)
 ------------------
 * Joystick relay for ROS 2 (`#43 <https://github.com/ros-teleop/twist_mux/issues/43>`_)
