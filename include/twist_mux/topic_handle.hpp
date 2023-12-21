@@ -75,11 +75,12 @@ public:
    */
   TopicHandle_(
     const std::string & name, const std::string & topic, const rclcpp::Duration & timeout,
-    priority_type priority, TwistMux * mux)
+    priority_type priority, bool pub_zero_if_locked, TwistMux * mux)
   : name_(name),
     topic_(topic),
     timeout_(timeout),
     priority_(clamp(priority, priority_type(0), priority_type(255))),
+    pub_zero_if_locked_(pub_zero_if_locked),
     mux_(mux),
     stamp_(0)
   {
@@ -151,6 +152,8 @@ protected:
 
   rclcpp::Time stamp_;
   T msg_;
+
+  bool pub_zero_if_locked_;
 };
 
 class VelocityTopicHandle : public TopicHandle_<geometry_msgs::msg::Twist>
@@ -166,8 +169,8 @@ public:
 
   VelocityTopicHandle(
     const std::string & name, const std::string & topic, const rclcpp::Duration & timeout,
-    priority_type priority, TwistMux * mux)
-  : base_type(name, topic, timeout, priority, mux)
+    priority_type priority, bool pub_zero_if_locked, TwistMux * mux)
+  : base_type(name, topic, timeout, priority, pub_zero_if_locked, mux)
   {
     subscriber_ = mux_->create_subscription<geometry_msgs::msg::Twist>(
       topic_, rclcpp::SystemDefaultsQoS(),
@@ -189,12 +192,19 @@ public:
     stamp_ = mux_->now();
     msg_ = *msg;
 
+    // If topic locked, overide with zero twist
+    const auto lock_priority = mux_->getLockPriority();
+    if (getPriority() < lock_priority) {
+      msg_ = geometry_msgs::msg::Twist();
+      if (!pub_zero_if_locked_) {return;}
+    }
+
     // Check if this twist has priority.
     // Note that we have to check all the locks because they might time out
     // and since we have several topics we must look for the highest one in
     // all the topic list; so far there's no O(1) solution.
     if (mux_->hasPriority(*this)) {
-      mux_->publishTwist(msg);
+      mux_->publishTwist(msg_);
     }
   }
 };
@@ -212,8 +222,8 @@ public:
 
   LockTopicHandle(
     const std::string & name, const std::string & topic, const rclcpp::Duration & timeout,
-    priority_type priority, TwistMux * mux)
-  : base_type(name, topic, timeout, priority, mux)
+    priority_type priority, bool pub_zero_if_locked, TwistMux * mux)
+  : base_type(name, topic, timeout, priority, pub_zero_if_locked, mux)
   {
     subscriber_ = mux_->create_subscription<std_msgs::msg::Bool>(
       topic_, rclcpp::SystemDefaultsQoS(),

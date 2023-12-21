@@ -107,9 +107,9 @@ void TwistMux::updateDiagnostics()
   diagnostics_->updateStatus(status_);
 }
 
-void TwistMux::publishTwist(const geometry_msgs::msg::Twist::ConstSharedPtr & msg)
+void TwistMux::publishTwist(const geometry_msgs::msg::Twist & msg)
 {
-  cmd_pub_->publish(*msg);
+  cmd_pub_->publish(msg);
 }
 
 template<typename T>
@@ -126,18 +126,26 @@ void TwistMux::getTopicHandles(const std::string & param_name, std::list<T> & to
       std::string topic;
       double timeout = 0;
       int priority = 0;
+      bool pub_zero_if_locked = false;
 
       auto nh = std::shared_ptr<rclcpp::Node>(this, [](rclcpp::Node *) {});
 
       fetch_param(nh, prefix + ".topic", topic);
       fetch_param(nh, prefix + ".timeout", timeout);
       fetch_param(nh, prefix + ".priority", priority);
+      try {
+        fetch_param(nh, prefix + ".pub_zero_if_locked", pub_zero_if_locked);
+      } catch (...) {
+      }
 
       RCLCPP_DEBUG(get_logger(), "Retrieved topic: %s", topic.c_str());
       RCLCPP_DEBUG(get_logger(), "Listed prefix: %.2f", timeout);
       RCLCPP_DEBUG(get_logger(), "Listed prefix: %d", priority);
+      RCLCPP_DEBUG(get_logger(), "Listed prefix: %d", pub_zero_if_locked);
 
-      topic_hs.emplace_back(prefix, topic, std::chrono::duration<double>(timeout), priority, this);
+      topic_hs.emplace_back(
+        prefix, topic, std::chrono::duration<double>(
+          timeout), priority, pub_zero_if_locked, this);
     }
   } catch (const ParamsHelperException & e) {
     RCLCPP_FATAL(get_logger(), "Error parsing params '%s':\n\t%s", param_name.c_str(), e.what());
@@ -167,15 +175,13 @@ int TwistMux::getLockPriority()
 
 bool TwistMux::hasPriority(const VelocityTopicHandle & twist)
 {
-  const auto lock_priority = getLockPriority();
-
   LockTopicHandle::priority_type priority = 0;
   std::string velocity_name = "NULL";
 
   /// max_element on the priority of velocity topic handles satisfying
   /// that is NOT masked by the lock priority:
   for (const auto & velocity_h : *velocity_hs_) {
-    if (!velocity_h.isMasked(lock_priority)) {
+    if (!velocity_h.hasExpired()) {
       const auto velocity_priority = velocity_h.getPriority();
       if (priority < velocity_priority) {
         priority = velocity_priority;
