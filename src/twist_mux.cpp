@@ -78,7 +78,7 @@ TwistMux::TwistMux()
 void TwistMux::init()
 {
   // Get use stamped parameter
-  bool use_stamped = false;
+  bool use_stamped = true;
   this->declare_parameter("use_stamped", use_stamped);
 
   auto nh = std::shared_ptr<rclcpp::Node>(this, [](rclcpp::Node *) {});
