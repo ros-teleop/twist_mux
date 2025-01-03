@@ -108,12 +108,12 @@ public:
   {
     std::string frame_id;
     double scale;
-    bool use_stamped;
+    bool use_stamped = true;
     double z;
 
     this->declare_parameter("frame_id", "base_footprint");
     this->declare_parameter("scale", 1.0);
-    this->declare_parameter("use_stamped", false);
+    this->declare_parameter("use_stamped", true);
     this->declare_parameter("vertical_position", 2.0);
 
     this->get_parameter<std::string>("frame_id", frame_id);
