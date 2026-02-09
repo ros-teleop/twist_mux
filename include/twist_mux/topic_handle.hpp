@@ -90,6 +90,12 @@ public:
       name_.c_str(), topic_.c_str(),
       ((timeout_.seconds() > 0) ? std::to_string(timeout_.seconds()) + "s" : "None").c_str(),
       static_cast<int>(priority_));
+    if (priority_ != priority) {
+      RCLCPP_WARN(
+        mux_->get_logger(),
+        "The priority of topic handler '%s' has been clamped from %d to %d.",
+        name_.c_str(), static_cast<int>(priority), static_cast<int>(priority_));
+    }
   }
 
   virtual ~TopicHandle_() = default;
@@ -167,6 +173,14 @@ public:
     priority_type priority, TwistMux * mux)
   : base_type(name, topic, timeout, priority, mux)
   {
+    if (priority <= static_cast<priority_type>(0)) {
+      RCLCPP_WARN(
+        mux_->get_logger(),
+        "Topic handler '%s' with priority %d <= 0 will never be selected. "
+        "Increase the priority to at least 1.",
+        name_.c_str(), static_cast<int>(priority));
+    }
+
     subscriber_ = mux_->create_subscription<geometry_msgs::msg::Twist>(
       topic_, rclcpp::SystemDefaultsQoS(),
       std::bind(&VelocityTopicHandle::callback, this, std::placeholders::_1));
@@ -206,6 +220,14 @@ public:
     priority_type priority, TwistMux * mux)
   : base_type(name, topic, timeout, priority, mux)
   {
+    if (priority <= static_cast<priority_type>(0)) {
+      RCLCPP_WARN(
+        mux_->get_logger(),
+        "Topic handler '%s' with priority %d <= 0 will never be selected. "
+        "Increase the priority to at least 1.",
+        name_.c_str(), static_cast<int>(priority));
+    }
+
     subscriber_ = mux_->create_subscription<geometry_msgs::msg::TwistStamped>(
       topic_, rclcpp::SystemDefaultsQoS(),
       std::bind(&VelocityStampedTopicHandle::callback, this, std::placeholders::_1));
@@ -244,6 +266,13 @@ public:
     priority_type priority, TwistMux * mux)
   : base_type(name, topic, timeout, priority, mux)
   {
+    if (priority <= static_cast<priority_type>(0)) {
+      RCLCPP_WARN(
+        mux_->get_logger(),
+        "Lock '%s' with priority %d <= 0 is redundant. Priority 0 is always locked.",
+        name_.c_str(), static_cast<int>(priority));
+    }
+
     subscriber_ = mux_->create_subscription<std_msgs::msg::Bool>(
       topic_, rclcpp::SystemDefaultsQoS(),
       std::bind(&LockTopicHandle::callback, this, std::placeholders::_1));
