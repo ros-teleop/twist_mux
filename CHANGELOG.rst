@@ -2,6 +2,13 @@
 Changelog for package twist_mux
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix regression: do not automatically declare "use_stamped" as it can cause an exception to be raised. (`#61 <https://github.com/ros-teleop/twist_mux/issues/61>`_)
+* Add priority validation warnings in TopicHandle (`#64 <https://github.com/ros-teleop/twist_mux/issues/64>`_)
+* Set twist_marker/use_stamped to default true, to match twist_mux (`#55 <https://github.com/ros-teleop/twist_mux/issues/55>`_)
+* Contributors: Alexander Entinger, Martin Pecka, Tom Wallis
+
 4.4.0 (2024-10-01)
 ------------------
 * TwistStamped Support (`#50 <https://github.com/ros-teleop/twist_mux/issues/50>`_)
