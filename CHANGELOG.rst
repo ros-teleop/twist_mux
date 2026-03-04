@@ -2,8 +2,8 @@
 Changelog for package twist_mux
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.5.1 (2026-03-04)
+------------------
 * migrate from removed ament_target_dependencies to modern CMake targets (`#67 <https://github.com/ros-teleop/twist_mux/issues/67>`_)
 * Contributors: Bence Magyar
 
