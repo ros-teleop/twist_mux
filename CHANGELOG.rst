@@ -2,6 +2,11 @@
 Changelog for package twist_mux
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* migrate from removed ament_target_dependencies to modern CMake targets (`#67 <https://github.com/ros-teleop/twist_mux/issues/67>`_)
+* Contributors: Bence Magyar
+
 4.5.0 (2026-02-19)
 ------------------
 * Fix regression: do not automatically declare "use_stamped" as it can cause an exception to be raised. (`#61 <https://github.com/ros-teleop/twist_mux/issues/61>`_)
