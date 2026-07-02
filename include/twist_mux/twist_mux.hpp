@@ -43,6 +43,7 @@
 #include <list>
 #include <memory>
 #include <string>
+#include <variant>
 
 using std::chrono_literals::operator""s;
 
@@ -51,7 +52,7 @@ namespace twist_mux
 // Forwarding declarations:
 class TwistMuxDiagnostics;
 struct TwistMuxDiagnosticsStatus;
-template <typename T>
+template<typename T>
 class VelocityTopicHandle;
 class LockTopicHandle;
 
@@ -64,9 +65,12 @@ class TwistMux : public rclcpp::Node
 public:
   template<typename T>
   using handle_container = std::list<T>;
-  using velocity_handle_variant = std::variant<VelocityTopicHandle<geometry_msgs::msg::Twist>, VelocityTopicHandle<geometry_msgs::msg::TwistStamped>>;
-  using publisher_variant = std::variant<rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr, rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr>;
-  using message_variant = std::variant<geometry_msgs::msg::Twist, geometry_msgs::msg::TwistStamped>;
+  using velocity_handle_variant = std::variant<
+    VelocityTopicHandle<geometry_msgs::msg::Twist>,
+    VelocityTopicHandle<geometry_msgs::msg::TwistStamped>>;
+  using publisher_variant = std::variant<
+    rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr,
+    rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr>;
 
   using velocity_topic_container = handle_container<velocity_handle_variant>;
   using lock_topic_container = handle_container<LockTopicHandle>;
@@ -76,11 +80,10 @@ public:
 
   void init();
 
-  template <typename VelocityTopicHandleT>
+  template<typename VelocityTopicHandleT>
   bool hasPriority(const VelocityTopicHandleT & twist);
 
-  
-  template <typename MessageConstSharedPtrT>
+  template<typename MessageConstSharedPtrT>
   void publishTwist(const MessageConstSharedPtrT & msg);
 
   void updateDiagnostics();
@@ -103,9 +106,8 @@ protected:
   std::shared_ptr<lock_topic_container> lock_hs_;
 
   publisher_variant cmd_pub_;
-  message_variant last_cmd_;
 
-  bool output_stamped;
+  bool output_stamped_;
 
   template<typename T>
   void getTopicHandles(const std::string & param_name, handle_container<T> & topic_hs);

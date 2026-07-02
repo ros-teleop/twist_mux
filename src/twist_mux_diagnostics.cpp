@@ -79,13 +79,14 @@ void TwistMuxDiagnostics::diagnostics(diagnostic_updater::DiagnosticStatusWrappe
   }
 
   for (auto & velocity_h : *status_->velocity_hs) {
-    std::visit([&stat, this](auto&& velocity_h) {
-      stat.addf(
-        "velocity " + velocity_h.getName(), " %s (listening to %s @ %fs with priority #%d)",
-        (velocity_h.isMasked(status_->priority) ? "masked" : "unmasked"),
-        velocity_h.getTopic().c_str(),
-        velocity_h.getTimeout().seconds(), static_cast<int>(velocity_h.getPriority()));
-    }, velocity_h );
+    std::visit(
+      [&stat, this](auto && handle) {
+        stat.addf(
+          "velocity " + handle.getName(), " %s (listening to %s @ %fs with priority #%d)",
+          (handle.isMasked(status_->priority) ? "masked" : "unmasked"),
+          handle.getTopic().c_str(),
+          handle.getTimeout().seconds(), static_cast<int>(handle.getPriority()));
+      }, velocity_h);
   }
 
   for (const auto & lock_h : *status_->lock_hs) {
