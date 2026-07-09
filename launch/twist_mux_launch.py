@@ -21,6 +21,7 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 
 
 def generate_launch_description():
@@ -52,13 +53,19 @@ def generate_launch_description():
             'use_sim_time',
             default_value='False',
             description='Use simulation time'),
+        DeclareLaunchArgument(
+            'output_stamped',
+            default_value='False',
+            description='Output as geometry_msgs/TwistStamped instead of geometry_msgs/Twist'),
         Node(
             package='twist_mux',
             executable='twist_mux',
             output='screen',
             remappings={('/cmd_vel_out', LaunchConfiguration('cmd_vel_out'))},
             parameters=[
-                {'use_sim_time': LaunchConfiguration('use_sim_time')},
+                {'use_sim_time': LaunchConfiguration('use_sim_time'),
+                 'output_stamped': ParameterValue(
+                     LaunchConfiguration('output_stamped'), value_type=bool)},
                 LaunchConfiguration('config_locks'),
                 LaunchConfiguration('config_topics')]
         ),

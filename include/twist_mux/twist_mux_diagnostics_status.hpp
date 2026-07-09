@@ -55,21 +55,16 @@ struct TwistMuxDiagnosticsStatus
 
   LockTopicHandle::priority_type priority;
 
-  bool use_stamped;
-
   std::shared_ptr<TwistMux::velocity_topic_container> velocity_hs;
-  std::shared_ptr<TwistMux::velocity_stamped_topic_container> velocity_stamped_hs;
   std::shared_ptr<TwistMux::lock_topic_container> lock_hs;
 
   TwistMuxDiagnosticsStatus()
   : reading_age(0),
     last_loop_update(rclcpp::Clock().now()),
     main_loop_time(0),
-    priority(0),
-    use_stamped(true)
+    priority(0)
   {
     velocity_hs = std::make_shared<TwistMux::velocity_topic_container>();
-    velocity_stamped_hs = std::make_shared<TwistMux::velocity_stamped_topic_container>();
     lock_hs = std::make_shared<TwistMux::lock_topic_container>();
   }
 };
